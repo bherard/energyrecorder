@@ -1,0 +1,29 @@
+[loggers]
+keys=root
+
+[handlers]
+keys=console,file_rotating
+
+[formatters]
+keys=simple
+
+[logger_root]
+level=DEBUG
+handlers=console,file_rotating
+
+[handler_console]
+class=StreamHandler
+level=DEBUG
+formatter=simple
+args=(sys.stdout,)
+
+[handler_file_rotating]
+class=logging.handlers.RotatingFileHandler
+level=DEBUG
+formatter=simple
+args=('/var/log/energyrecorder/server-collector.log', 'a', 100 * 1024 *1024 , 5,)
+
+
+[formatter_simple]
+format=%(asctime)s - %(name)s - %(levelname)s - %(message)s
+datefmt=

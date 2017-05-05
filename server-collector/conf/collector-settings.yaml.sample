@@ -1,0 +1,36 @@
+PODS:
+- environment: YOUR-SERVER-GROUP-NAME
+  servers:
+	# HP ILO Server
+  - host: server-ip-or-name[:port]
+	# At your choice
+    id: server-id 
+    type: ilo
+    user: ilo-user
+    pass: ilo-user-password
+    #polling internval in seconds
+    polling_interval: 10
+    
+	#redfish server
+  - host: server-ip-or-name[:port]
+	# At your choice
+    id: server-id 
+    type: redfish
+    user: ilo-user
+    pass: ilo-user-password
+    #polling internval in seconds
+    
+    #Generic IPMI (see ipmicollector.py to see supported hardware)
+  - host: server-ip-or-name[:bidged-address] ex 192.168.0.1 or if bidging required 192.168.0.1:0x82
+	# At your choice
+    id: server-id 
+    type: ipmi
+    user: Administrator
+    pass: opnfv2017
+    polling_interval: 10
+    polling_interval: 10
+
+RECORDER_API_SERVER:
+  base_url: http://161.105.253.100:8888
+  pass: ''
+  user: ''
