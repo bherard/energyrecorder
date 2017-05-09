@@ -1,0 +1,30 @@
+# --------------------------------------------------------
+# Module Name :  power recording API
+# Version : 1.0
+#
+# Software Name : Open NFV functest
+# Version :
+#
+# Copyright © 2017 Orange
+# This software is distributed under the Apache 2 license
+# <http://www.apache.org/licenses/LICENSE-2.0.html>
+#
+# -------------------------------------------------------
+# File Name   : conf/webapp.yaml
+#
+# Created     : 2017-02
+# Authors     : Benoit HERARD <benoit.herard(at)orange.com>
+#
+# Description :
+#     API Settings
+# -------------------------------------------------------
+# History     :
+# 1.0.0 - 2017-02-20 : Release of the file
+# Flask settings
+INFLUX:
+    host: "http://localhost:8086"
+    db: "NRG"
+    user: ""
+    pass: ""
+
+BIND: "0.0.0.0:8888"
