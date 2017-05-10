@@ -10,6 +10,14 @@ RUN bash -c "apt-get update;\
     cd energyrecorder;\
     virtualenv venv;\
     source venv/bin/activate;\
-    pip install -r web.py/requirements.txt"
+    pip install -r web.py/requirements.txt;\
+    mv /entrypoint.sh /influx-entrypoint.sh;\
+    echo '#!/bin/bash' > /entrypoint.sh;\
+    echo 'nohup /usr/local/energyrecorder/bin/run-webapp.sh &' >> /entrypoint.sh;\
+    echo 'influxd' >> /entrypoint.sh;\
+    chmod u+x /entrypoint.sh;"
 
-ENTRYPOINT /usr/local/energyrecorder/bin/run-webapp.sh
+RUN bash -c "nohup influxd &" ; sleep 1 ; influx < /usr/local/energyrecorder/web.py/creation.iql
+
+
+ENTRYPOINT /entrypoint.sh
