@@ -15,8 +15,8 @@ RUN bash -c "apt-get update;\
     echo '#!/bin/bash' > /entrypoint.sh;\
     echo 'nohup /usr/local/energyrecorder/bin/run-webapp.sh &' >> /entrypoint.sh;\
     echo 'influxd' >> /entrypoint.sh;\
-    echo 'curl https://raw.githubusercontent.com/bherard/energyrecorder/master/web.py/creation.iql|influx' >> /entrypoint.sh\
-    chmod a+x /entrypoint.sh;"
+    echo 'curl https://raw.githubusercontent.com/bherard/energyrecorder/master/web.py/creation.iql|influx' >> /entrypoint.sh;\
+    chmod u+x /entrypoint.sh;"
 
 #RUN bash -c "nohup influxd &" ; sleep 1 ; influx < /usr/local/energyrecorder/web.py/creation.iql
 
