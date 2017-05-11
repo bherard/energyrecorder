@@ -32,6 +32,7 @@ from flask import Flask, Blueprint
 import settings
 from api.endpoints.servers import NS as servers_namespace
 from api.endpoints.recorder import NS as recorder_namespace
+from api.endpoints.monitoring import NS as monitoring_namespace
 from api.restplus import API as api
 
 APP = Flask(__name__)
@@ -80,6 +81,7 @@ def initialize_app(flask_app):
 
     api.add_namespace(servers_namespace)
     api.add_namespace(recorder_namespace)
+    api.add_namespace(monitoring_namespace)
 
     api_doc = flask_restplus.apidoc.apidoc
     api_doc.url_prefix = settings.API["context_root"] + "/doc"

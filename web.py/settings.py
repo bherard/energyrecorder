@@ -38,5 +38,5 @@ API = {
     "description": 'PODs Energy consumption gathering API'
 }
 
-UNFLUX = None
+INFLUX = {}
 BIND = None
