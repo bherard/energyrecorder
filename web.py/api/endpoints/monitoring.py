@@ -55,7 +55,7 @@ class Ping(Resource):
         influx_url = settings.INFLUX["host"] + "/query?q="
         influx_url += urllib.quote_plus("SHOW DATABASES")
         influx_url += "&db=" + urllib.quote_plus(settings.INFLUX["db"])
-        response = requests.get(influx_url, auth=auth)
+        response = requests.get(influx_url, auth=auth, timeout=1)
         if response.status_code != 200:
             raise Exception("Unable to connect influxDB")
         return result
