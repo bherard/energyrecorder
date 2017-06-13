@@ -29,7 +29,7 @@ import requests
 from flask import request
 from flask_restplus import Resource
 
-# import settings
+import settings
 from api.datamodel import POWER_MEASUREMENT, POWER_POST
 from api.datamodel import NRGPowerMeasurementClass
 from api.restplus import API as api
@@ -87,7 +87,11 @@ class ServerConsumption(Resource):
 
         influx_url = settings.INFLUX["host"]+"/write?db="
         influx_url += settings.INFLUX["db"]
-        response = requests.post(influx_url, data=influx_data, auth=auth)
+        response = requests.post(
+            influx_url,
+            data=influx_data,
+            auth=auth,
+            verify=False)
         if response.status_code != 204:
             log_msg = "Error while storing measurment: {}"
             log_msg = log_msg.format(response.text)

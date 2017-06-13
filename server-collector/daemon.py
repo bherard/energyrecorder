@@ -31,6 +31,7 @@ import sys
 import yaml
 
 from ilocollector import ILOCollector
+from ilo_gui_collector import ILOGUICollector
 from ipmicollector import IPMICollector
 from redfishcollector import RedfishCollector
 
@@ -85,6 +86,19 @@ for pod in CONFIG["PODS"]:
                                      server["id"],
                                      ilo_server_conf,
                                      CONFIG["RECORDER_API_SERVER"])
+        elif server["type"] == "ilo-gui":
+            ilo_server_conf = {
+                "base_url": "https://{}".format(server["host"]),
+                "user": server["user"],
+                "pass": server["pass"],
+                "polling_interval": server["polling_interval"]
+
+            }
+            collector = ILOGUICollector(pod["environment"],
+                                        server["id"],
+                                        ilo_server_conf,
+                                        CONFIG["RECORDER_API_SERVER"])
+
         elif server["type"] == "redfish":
             ilo_server_conf = {
                 "base_url": "https://{}".format(server["host"]),

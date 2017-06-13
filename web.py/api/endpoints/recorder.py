@@ -39,7 +39,7 @@ from api.restplus import API as api
 RUNNING_SCENARIO_RP = "running_scenarios_rp"
 
 NS = api.namespace('recorders',
-                   description='Data recording management')
+                   description='Recording sessions management')
 
 PARSER = api.parser()
 PARSER.add_argument('time', type=int,
@@ -87,7 +87,7 @@ class Recorder(Resource):
         influx_url = settings.INFLUX["host"] + "/query?q="
         influx_url += urllib.quote_plus(str_select)
         influx_url += "&db=" + urllib.quote_plus(settings.INFLUX["db"])
-        response = requests.get(influx_url, auth=auth)
+        response = requests.get(influx_url, auth=auth, verify=False)
         if response.status_code == 200:
             json_object = json.loads(response.text)
 
@@ -198,7 +198,11 @@ class Recorder(Resource):
         influx_url += "/write?db="
         influx_url += settings.INFLUX["db"]
         influx_url += "&rp=" + RUNNING_SCENARIO_RP
-        response = requests.post(influx_url, data=influx_data, auth=auth)
+        response = requests.post(
+            influx_url,
+            data=influx_data,
+            auth=auth,
+            verify=False)
         if response.status_code != 204:
             log_msg = "Error while storing recorder: {}"
             log_msg = log_msg.format(response.text)
@@ -220,8 +224,8 @@ class Recorder(Resource):
         args = PARSER.parse_args(request)
         time = args.get('time', None)
 
-        self.logger.debug(args)
         result = self.load_session(env, time)
+        self.logger.debug(result)
         return result
 
     @api.marshal_with(RUNNING_SCENARIO)

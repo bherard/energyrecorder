@@ -26,10 +26,12 @@
 
 import logging
 import urllib
+import json
 import requests
 
 from flask_restplus import Resource
 import settings
+from api.datamodel import API_STATUS, NRGAPIStatusClass
 from api.restplus import API as api
 
 
@@ -46,20 +48,28 @@ class Ping(Resource):
     def connect_influx(self):
         """Try to connect influxDB."""
         self.logger.debug("ping called")
-        result = "OK"
+
+        result = NRGAPIStatusClass("OK")
         if settings.INFLUX["user"] is not None:
             auth = (settings.INFLUX["user"], settings.INFLUX["pass"])
         else:
             auth = None
 
+        query = 'SHOW RETENTION POLICIES ON "{}"'
+        query = query.format(settings.INFLUX["db"])
         influx_url = settings.INFLUX["host"] + "/query?q="
-        influx_url += urllib.quote_plus("SHOW DATABASES")
+        influx_url += urllib.quote_plus(query)
         influx_url += "&db=" + urllib.quote_plus(settings.INFLUX["db"])
-        response = requests.get(influx_url, auth=auth, timeout=1)
+        response = requests.get(influx_url, auth=auth, timeout=1, verify=False)
         if response.status_code != 200:
-            raise Exception("Unable to connect influxDB")
+            error = json.loads(response.text)
+            raise Exception("Unable to connect influxDB: " + error["error"])
+        json_object = json.loads(response.text)
+        if "error" in json_object["results"][0]:
+            raise Exception(json_object["results"][0]["error"])
         return result
 
+    @api.marshal_with(API_STATUS)
     def get(self):
         """Return API status."""
         return self.connect_influx()

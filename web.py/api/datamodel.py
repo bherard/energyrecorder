@@ -48,6 +48,11 @@ RECORDER_POST = API.model('recorderPost', {
                           description='Current step of this scenario'),
 })
 
+API_STATUS = API.model('NRGAPIStatus', {
+    'status': fields.String(required=True,
+                            decription='Current API status')
+})
+
 RUNNING_SCENARIO = API.inherit('NRGRunningScenario', RECORDER_POST, {
     'environment': fields.String(required=True,
                                  description='Recorder identifier'),
@@ -108,3 +113,17 @@ class NRGPowerMeasurementClass(NRGRunningScenarioClass):
         """
         NRGRunningScenarioClass.__init__(self, environment, scenario, step)
         self.power = power
+
+
+# pylint: disable=locally-disabled,too-few-public-methods
+class NRGAPIStatusClass(object):
+    """API Monitoring status."""
+
+    def __init__(self, status):
+        """
+        Constructor: create an instance of NRGAPIStatusClass.
+
+            :param status: Current API status
+            :type status: string
+        """
+        self.status = status

@@ -11,6 +11,16 @@ PODS:
     #polling internval in seconds
     polling_interval: 10
     
+	# HP ILO Server (GUI Scrapping)
+  - host: server-ip-or-name[:port]
+	# At your choice
+    id: server-id 
+    type: ilo-gui
+    user: ilo-user
+    pass: ilo-user-password
+    #polling internval in seconds
+    polling_interval: 10
+    
 	#redfish server
   - host: server-ip-or-name[:port]
 	# At your choice

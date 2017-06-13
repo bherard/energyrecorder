@@ -26,6 +26,7 @@
 import logging.config
 import sys
 import flask_restplus.apidoc
+import requests
 import yaml
 
 from flask import Flask, Blueprint
@@ -65,6 +66,10 @@ def configure_app(flask_app):
         'ERROR_404_HELP'
     ] = settings.RESTPLUS_ERROR_404_HELP
 
+    flask_app.config[
+        'APPLICATION_ROOT'
+    ] = settings.API["context_root"]
+
 
 def initialize_app(flask_app):
     """Apply application configuration.
@@ -86,6 +91,7 @@ def initialize_app(flask_app):
     api_doc = flask_restplus.apidoc.apidoc
     api_doc.url_prefix = settings.API["context_root"] + "/doc"
     flask_app.register_blueprint(blueprint)
+    requests.packages.urllib3.disable_warnings()
 
 
 @APP.after_request
@@ -102,10 +108,17 @@ def after_request(response):
 
 def main():
     """Application launcher."""
+    server_binding = settings.BIND.split(':')
+    APP.run(debug=settings.FLASK_DEBUG,
+            port=int(server_binding[1]),
+            host=server_binding[0])
+
+
+def load_config():
+    """Load application config from YAML."""
     LOG.info("Server power consumption daemon is starting")
     with open("conf/webapp-settings.yaml", 'r') as stream:
         try:
-
             config = yaml.load(stream)
             settings.BIND = config["BIND"]
             settings.INFLUX = config["INFLUX"]
@@ -114,11 +127,8 @@ def main():
             sys.exit()
     initialize_app(APP)
     LOG.info('>>>>> Starting server  <<<<<')
-    server_binding = settings.BIND.split(':')
-    APP.run(debug=settings.FLASK_DEBUG,
-            port=int(server_binding[1]),
-            host=server_binding[0])
 
 
+load_config()
 if __name__ == "__main__":
     main()

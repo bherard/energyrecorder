@@ -176,6 +176,6 @@ class RedfishCollector(Thread):
                     self.log.debug(traceback.format_exc())
                     self.log.error(err_text)
 
-            time.sleep(9.5)
+            time.sleep(self.redfish_server_conf["polling_interval"])
         log_msg = "Thread for server {} is teminated".format(self.server_id)
         self.log.debug(log_msg)
