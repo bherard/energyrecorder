@@ -18,7 +18,11 @@ commonName                      = $HOSTNAME
 EOF
 
 openssl req -config influx.cnf  -new -x509  -days 3650 -nodes  -out  /etc/ssl/certs/influxdb.pem  -keyout  /etc/ssl/private/influxdb.key
+cat /etc/ssl/private/influxdb.key>/etc/ssl/influxdb.pem
+cat /etc/ssl/certs/influxdb.pem>>/etc/ssl/influxdb.pem
 chown root:root /etc/ssl/private/influxdb.key
 chmod 644 /etc/ssl/private/influxdb.key
 chown root:root /etc/ssl/certs/influxdb.pem
 chmod 644 /etc/ssl/certs/influxdb.pem
+chown root:root /etc/ssl/influxdb.pem
+chmod 644 /etc/ssl/influxdb.pem
