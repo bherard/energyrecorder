@@ -5,7 +5,7 @@ sleep 1
 curl https://raw.githubusercontent.com/bherard/energyrecorder/master/web.py/creation.iql|influx
 ps aux|grep influxd|grep -v grep|awk '{print $2}'|xargs kill -9
 /usr/local/bin/create-certs.sh
-cat <<EOF >>i /etc/influxdb/influxdb.conf 
+cat <<EOF >> /etc/influxdb/influxdb.conf 
 
 [http]
   enabled = true
