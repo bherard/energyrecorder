@@ -17,7 +17,7 @@ policy			= policy_anything
 commonName                      = $HOSTNAME
 EOF
 
-openssl req -config influx.cnf  -new -x509  -days 3650 -nodes  -out  /etc/ssl/certs/influxdb.pem  -keyout  /etc/ssl/private/influxdb.key
+openssl req -config influx.cnf  -new -x509  -days 3650 -nodes  -out  /etc/ssl/influxdb.pem  -keyout  /etc/ssl/influxdb.key
 chown root:root /etc/ssl/private/influxdb.key
 chmod 644 /etc/ssl/private/influxdb.key
 chown root:root /etc/ssl/certs/influxdb.pem
