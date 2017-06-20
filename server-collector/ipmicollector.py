@@ -47,6 +47,7 @@ class IPMICollector(Thread):
         "10297": "BOARD_POWER",      # Advantech
         "40092": "HSC Input Power",  # Lenovo
         "674": "Pwr Consumption",    # DELL
+        "5771": "POWER_USAGE",    	 # CISCO
     }
 
     def __init__(self,
