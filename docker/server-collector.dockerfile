@@ -2,7 +2,7 @@ FROM ubuntu:16.04
 MAINTAINER benoit.herard@orange.com
 
 RUN bash -c "apt-get update;\
-    apt-get install -y git python python-pip; \
+    apt-get install -y git python python-pip ipmitool; \
     pip install --upgrade pip; \
     pip install virtualenv; \
     cd /usr/local;\
