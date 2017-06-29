@@ -30,11 +30,9 @@ import sys
 import traceback
 from threading import Thread
 import requests
-
 from common import DataPoster
-# from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
-requests.packages.urllib3.disable_warnings()
+requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
 
 
 class ILOGUICollector(Thread):

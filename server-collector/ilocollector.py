@@ -32,11 +32,9 @@ from threading import Thread
 import calendar
 import requests
 import dateutil.parser as dp
-
 from common import DataPoster
-# from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
-requests.packages.urllib3.disable_warnings()
+requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
 
 
 class ILOCollector(Thread):

@@ -32,10 +32,9 @@ import sys
 import traceback
 from threading import Thread
 import requests
-
 from common import DataPoster
 
-requests.packages.urllib3.disable_warnings()
+requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
 
 
 class RedfishCollector(Thread):
