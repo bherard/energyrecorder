@@ -3,44 +3,54 @@
 #	ilo: for Gen9 HP server using OEM API
 #	ilo-gui: for Gen8 HP Server, web gui scrapping
 #	redfish: for server support Redfish REST API
-#	ipmi: using impitool. See "grammar" dicionary in ipmicolector.py for supported manufacturer 
+#	ipmi: using impitool. See "grammar" dicionary in ipmicolector.py for supported manufacturer
 PODS:
 - environment: YOUR-SERVER-GROUP-NAME
   servers:
 	# HP ILO Server (Gen9)
   - host: server-ip-or-name[:port]
 	# At your choice
-    id: server-id 
+    id: server-id
     type: ilo
     user: ilo-user
     pass: ilo-user-password
     #polling internval in seconds
     polling_interval: 10
-    
+
 	# HP ILO Server (GUI Scrapping, Gen8))
   - host: server-ip-or-name[:port]
 	# At your choice
-    id: server-id 
+    id: server-id
     type: ilo-gui
     user: ilo-user
     pass: ilo-user-password
     #polling internval in seconds
     polling_interval: 10
-    
+
+	# DEL IDRAC8 Server (GUI Scrapping))
+  - host: server-ip-or-name[:port]
+	# At your choice
+    id: server-id
+    type: idrac8-gui
+    user: idrac-user
+    pass: idrac-user-password
+    #polling internval in seconds
+    polling_interval: 10
+
 	#redfish server
   - host: server-ip-or-name[:port]
 	# At your choice
-    id: server-id 
+    id: server-id
     type: redfish
     user: ilo-user
     pass: ilo-user-password
     #polling internval in seconds
     polling_interval: 10
-    
+
     #Generic IPMI (see ipmicollector.py to see supported hardware)
   - host: server-ip-or-name[:bidged-address] # ex 192.168.0.1 or if bidging required 192.168.0.1:0x82
 	# At your choice
-    id: server-id 
+    id: server-id
     type: ipmi
     user: ipmi-user
     pass: ipme-user-password
