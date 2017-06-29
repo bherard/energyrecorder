@@ -13,13 +13,13 @@ cat <<EOF >> /etc/influxdb/influxdb.conf
 
 [http]
   enabled = true
-  auth-enabled = true
-  https-enabled = true
+  auth-enabled = False
+  https-enabled = False
 	https-certificate = "/etc/ssl/influxdb.pem"
 
 [admin]
 	enabled = true
-	https-enabled = true
+	https-enabled = False
 	https-certificate = "/etc/ssl/influxdb.pem"
 EOF
 influxd
