@@ -22,7 +22,7 @@
 # 1.0.0 - 2017-02-20 : Release of the file
 # Flask settings
 INFLUX:
-    host: "https://localhost:8086"
+    host: "http://localhost:8086"
     db: "NRG"
     user: ""
     pass: ""
