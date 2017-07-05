@@ -40,13 +40,14 @@ class IPMICollector(Thread):
     # and associated "sensor" keyword for Power.
 
     grammar = {
-        "11": "PwrMeter Output|Power Meter",     # HP
+        "11": "Power Meter",                     # HP
         "20301": "Avg Power",                    # IBM
         "28458": "HSC Input Power",              # Nokia
         "10297": "BOARD_POWER",                  # Advantech
         "40092": "HSC Input Power",              # Lenovo
         "674": "Pwr Consumption",                # DELL
         "5771": "POWER_USAGE",    	             # CISCO
+        "343": "PS.* Input Power",               # Intel
     }
 
     def __init__(self,
@@ -110,6 +111,8 @@ class IPMICollector(Thread):
 
     def get_manufacturer_id(self):
         """Get Manufacturer id from IPMI."""
+        self.log.debug("Getting manufacturer for server %s",
+                       self.ipmi_server_conf["host"])
         try:
             server_def = self.ipmi_server_conf["host"].split(":")
             server_addr = server_def[0]
@@ -137,17 +140,48 @@ class IPMICollector(Thread):
             self.log.error(log_msg)
             return "none"
 
-    def get_power(self, manufacturer):
+    def get_sensors(self, manufacturer):
+        """Return Power sensors list."""
+        self.log.debug("Getting sensors from manufacturer '%s'", manufacturer)
+        self.log.debug(
+            "Manufacturer IPMI pattern is '%s'", self.grammar[manufacturer])
+        server_def = self.ipmi_server_conf["host"].split(":")
+        if len(server_def) > 1:
+            bridge_cmd = " -t " + server_def[1]
+        else:
+            bridge_cmd = ""
+        sys_cmd = ("ipmitool -I lanplus -H " +
+                   server_def[0] +
+                   bridge_cmd +
+                   " -U '" + self.pod_auth[0] + "'"
+                   " -P '" + self.pod_auth[1] + "'"
+                   " sensor "
+                   "| egrep '" + self.grammar[manufacturer] + "'"
+                   "| awk -F '|' '{print $1}'")
+        ipmi_sensors = subprocess.check_output(sys_cmd,
+                                               shell=True,
+                                               stderr=subprocess.STDOUT,
+                                               universal_newlines=True)
+        s_list = ipmi_sensors.rstrip().split("\n")
+        result = []
+        for val in s_list:
+            sensor = val.rstrip()
+            self.log.debug("\tFound sensor %s from manufacturer %s",
+                           sensor,
+                           manufacturer)
+            result.append(sensor)
+        return result
+
+    def get_power(self, sensors):
         """Return power value from sensor reading."""
-        power = None
+        power = 0
         server_def = self.ipmi_server_conf["host"].split(":")
         if len(server_def) > 1:
             bridge_cmd = " -t " + server_def[1]
         else:
             bridge_cmd = ""
 
-        k_words = self.grammar[manufacturer].split('|')
-        for k_word in k_words:
+        for sensor in sensors:
             try:
                 sys_cmd = ("ipmitool -I lanplus -H " +
                            server_def[0] +
@@ -155,26 +189,26 @@ class IPMICollector(Thread):
                            " -U '" + self.pod_auth[0] + "'"
                            " -P '" + self.pod_auth[1] + "'"
                            " sensor reading '" +
-                           k_word + "'")
+                           sensor + "'")
                 ipmi_data = subprocess.check_output(
                     sys_cmd,
                     shell=True,
                     stderr=subprocess.STDOUT,
                     universal_newlines=True)
-                self.log.debug("GOT IMPI DATA")
                 sys_cmd = ""
                 sys_cmd += 'echo "' + ipmi_data + '"'
                 sys_cmd += "|awk -F '|' '{print $2}'"
 
                 str_power = subprocess.check_output(sys_cmd, shell=True)
                 str_power = str_power.strip(' \t\n\r')
-                self.log.debug(str_power)
                 if str_power != "":
-                    power = int(float(str_power))
-                    break
+                    sensor_power = int(float(str_power))
+                    self.log.debug("\tGot power '%s' from sensor '%s'",
+                                   sensor_power, sensor)
+                    power += sensor_power
             except subprocess.CalledProcessError as exc:
                 if exc.returncode == 1:
-                    self.log.debug("Wrong sensor: " + k_word)
+                    self.log.debug("Wrong sensor: " + sensor)
                     continue
                 else:
                     log_msg = "IPMI Error while trying to get Power data: "
@@ -182,6 +216,7 @@ class IPMICollector(Thread):
                     log_msg = log_msg.format(exc.returncode, exc.output)
                     self.log.error(log_msg)
 
+        self.log.debug("Global power is %d", power)
         return power
 
     def run(self):
@@ -193,15 +228,16 @@ class IPMICollector(Thread):
             log_msg = "Manufacturer ID {} not supported".format(manufacturer)
             self.log.error(log_msg)
             self.running = False
+        else:
+            sensors = self.get_sensors(manufacturer)
+            self.log.debug("Main thread is starting....")
         while self.running:
 
             try:
-                power = self.get_power(manufacturer)
+                power = self.get_power(sensors)
                 if power is not None:
                     cur_time = time.time()
                     data_time = int(cur_time) * 1000000000
-
-                    self.log.debug("IPMI POWER=" + str(power))
 
                     data = {
                         "environment": self.environment,

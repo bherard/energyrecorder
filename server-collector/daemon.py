@@ -138,6 +138,9 @@ for pod in CONFIG["PODS"]:
                                       server["id"],
                                       ipmi_server_conf,
                                       CONFIG["RECORDER_API_SERVER"])
+        else:
+            raise Exception(
+                "Unsupported power collect method: {}".format(server["type"]))
 
         SERVER_THREADS.append(collector)
         collector.start()
