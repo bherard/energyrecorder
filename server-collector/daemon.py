@@ -33,6 +33,7 @@ import yaml
 from ilocollector import ILOCollector
 from ilo_gui_collector import ILOGUICollector
 from idrac8_gui_collector import IDRAC8GUICollector
+from intel_gui_collector import INTELGUICollector
 from ipmicollector import IPMICollector
 from redfishcollector import RedfishCollector
 
@@ -112,6 +113,19 @@ for pod in CONFIG["PODS"]:
                                            server["id"],
                                            idrac_server_conf,
                                            CONFIG["RECORDER_API_SERVER"])
+
+        elif server["type"] == "intel-gui":
+            intel_server_conf = {
+                "base_url": "https://{}".format(server["host"]),
+                "user": server["user"],
+                "pass": server["pass"],
+                "polling_interval": server["polling_interval"]
+
+            }
+            collector = INTELGUICollector(pod["environment"],
+                                          server["id"],
+                                          intel_server_conf,
+                                          CONFIG["RECORDER_API_SERVER"])
 
         elif server["type"] == "redfish":
             ilo_server_conf = {
