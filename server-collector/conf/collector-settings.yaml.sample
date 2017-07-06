@@ -17,7 +17,7 @@ PODS:
     #polling internval in seconds
     polling_interval: 10
 
-	# HP ILO Server (GUI Scrapping, Gen8))
+	# HP ILO Server (GUI Hacking, Gen8))
   - host: server-ip-or-name[:port]
 	# At your choice
     id: server-id
@@ -27,13 +27,23 @@ PODS:
     #polling internval in seconds
     polling_interval: 10
 
-	# DEL IDRAC8 Server (GUI Scrapping))
+	# DELL IDRAC8 Server (GUI Hacking))
   - host: server-ip-or-name[:port]
 	# At your choice
     id: server-id
     type: idrac8-gui
     user: idrac-user
     pass: idrac-user-password
+    #polling internval in seconds
+    polling_interval: 10
+
+	# INTEL Server (GUI Hacking))
+  - host: server-ip-or-name[:port]
+	# At your choice
+    id: server-id
+    type: intel-gui
+    user: web-console-user
+    pass: web-console-user-password
     #polling internval in seconds
     polling_interval: 10
 
