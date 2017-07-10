@@ -14,7 +14,7 @@ fi
 if [ ! -f /etc/ssl/influxdb.pem ] ; then
         /usr/local/bin/create-certs.sh
 fi
-grep '[admin]' /etc/influxdb/influxdb.conf >/dev/null
+grep '\[admin\]' /etc/influxdb/influxdb.conf >/dev/null
 if [ $? -ne 0 ] ; then
         cat <<EOF >> /etc/influxdb/influxdb.conf
 
