@@ -4,7 +4,7 @@ MAINTAINER benoit.herard@orange.com
 RUN apk update;\
     apk add git python py-pip bash ca-certificates ; \
     update-ca-certificates ; \
-    apk add openssl
+    apk add openssl ;\
     pip install --upgrade pip; \
     pip install virtualenv; \
     cd /usr/local;\
