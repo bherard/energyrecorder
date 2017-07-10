@@ -22,4 +22,3 @@ RUN wget https://raw.githubusercontent.com/bherard/energyrecorder/master/docker/
 	echo DONE
 
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
-#apk update && apk add ca-certificates && update-ca-certificates && apk add openssl
