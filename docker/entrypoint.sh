@@ -14,20 +14,15 @@ fi
 if [ ! -f /etc/ssl/influxdb.pem ] ; then
         /usr/local/bin/create-certs.sh
 fi
-grep '\[admin\]' /etc/influxdb/influxdb.conf >/dev/null
+grep '\[http\]' /etc/influxdb/influxdb.conf >/dev/null
 if [ $? -ne 0 ] ; then
         cat <<EOF >> /etc/influxdb/influxdb.conf
 
 [http]
-enabled = true
-auth-enabled = false
-https-enabled = false
-https-certificate = "/etc/ssl/influxdb.pem"
-
-[admin]
-enabled = true
-https-enabled = false
-https-certificate = "/etc/ssl/influxdb.pem"
+  enabled = true
+  auth-enabled = false
+  https-enabled = false
+  https-certificate = "/etc/ssl/influxdb.pem"
 EOF
 fi
 ps ax|grep influxd|grep -v grep|awk '{print $1}'|xargs kill -9
