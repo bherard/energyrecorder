@@ -2,7 +2,7 @@ FROM influxdb:alpine
 MAINTAINER benoit.herard@orange.com
 
 RUN apk update;\
-    apt add git python py-pip bash ca-certificates ; \
+    apk add git python py-pip bash ca-certificates ; \
     update-ca-certificates ; \
     apk add openssl
     pip install --upgrade pip; \
