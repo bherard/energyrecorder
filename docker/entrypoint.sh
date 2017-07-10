@@ -30,5 +30,5 @@ https-enabled = false
 https-certificate = "/etc/ssl/influxdb.pem"
 EOF
 fi
-ps aux|grep influxd|grep -v grep|awk '{print $2}'|xargs kill -9
+ps ax|grep influxd|grep -v grep|awk '{print $1}'|xargs kill -9
 influxd
