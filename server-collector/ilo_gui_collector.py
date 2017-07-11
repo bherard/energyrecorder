@@ -173,17 +173,23 @@ class ILOGUICollector(Thread):
                 data_time = None
                 power = power_metter['samples'][0]['avg']
                 cur_time = time.time()
-                if power_metter['samples'][0]['time'] != 'N/A':
-                    time_offset = int(power_metter[
-                        'samples'
-                    ][
-                        0
-                    ][
-                        'time'
-                    ]) * -1
-                else:
-                    time_offset = 0
+                # Between 2 bad things, choose not the worth.....
+                # If time is significant on server, accurancy
+                # of measurment is better
+                # If not (hummm... time zones....) we loose measurments.....
+                # better to have at at +/- 10s
+                # if power_metter['samples'][0]['time'] != 'N/A':
+                #     time_offset = int(power_metter[
+                #         'samples'
+                #     ][
+                #         0
+                #     ][
+                #         'time'
+                #     ]) * -1
+                # else:
+                #     time_offset = 0
                 # Get measurement time in nano sec.
+                time_offset = 0
                 data_time = int(cur_time + time_offset) * 1000000000
 
                 self.log.debug("POWER=" + str(power))
