@@ -12,4 +12,5 @@ RUN apk update;\
     source venv/bin/activate;\
     pip install -r server-collector/requirements.txt
 
+
 ENTRYPOINT /usr/local/energyrecorder/bin/run-collector.sh
