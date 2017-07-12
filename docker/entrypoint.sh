@@ -1,5 +1,5 @@
 #!/bin/bash
-nohup /usr/local/energyrecorder/bin/run-webapp.sh &
+nohup python /usr/local/energyrecorder/web.py/app.py &
 influxd &
 sleep 1
 echo "show databases" | influx -username "$1" -password "$2"|grep NRG
