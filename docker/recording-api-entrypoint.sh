@@ -1,5 +1,7 @@
 #!/bin/bash
-nohup python /usr/local/energyrecorder/recording-api/app.py &
+cd /usr/local/energyrecorder/recording-api/
+export PYTHONPATH=.:$PYTHONPATH
+python app.py &
 influxd &
 sleep 1
 echo "show databases" | influx -username "$1" -password "$2"|grep NRG
