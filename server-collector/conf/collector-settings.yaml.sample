@@ -68,6 +68,6 @@ PODS:
     polling_interval: 10
 
 RECORDER_API_SERVER:
-  base_url: http://161.105.253.100:8888
+  base_url: http://energy.opnfv.fr
   pass: ''
   user: ''
