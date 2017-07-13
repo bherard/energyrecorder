@@ -1,0 +1,6 @@
+environment:
+  name: your-environement
+api:
+  url: http://172.17.0.1/energyrecorder/resources
+  user: ''
+  password: ''

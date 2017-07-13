@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Copyright (c) 2017 Orange and others.
+#
+# All rights reserved. This program and the accompanying materials
+# are made available under the terms of the Apache License, Version 2.0
+# which accompanies this distribution, and is available at
+# http://www.apache.org/licenses/LICENSE-2.0
+
+#Energy API SDK Configuration file
+
+ENERGY_LOG_LEVEL=$LOG_DEBUG # Possible value are $LOG_DEBUG $LOG_INFO $LOG_WARING $LOG_DEBUG
+
+ENERGY_ENVIRONMENT_NAME=your-environement-name
+ENERGY_API_URL=http://energy.opnfv.fr
+ENERGY_API_USER=""
+ENERGY_API_PASSWORD=""
