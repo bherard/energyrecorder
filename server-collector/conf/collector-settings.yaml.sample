@@ -52,8 +52,8 @@ PODS:
 	# At your choice
     id: server-id
     type: redfish
-    user: ilo-user
-    pass: ilo-user-password
+    user: redfish-user
+    pass: redfish-user-password
     #polling internval in seconds
     polling_interval: 10
 
