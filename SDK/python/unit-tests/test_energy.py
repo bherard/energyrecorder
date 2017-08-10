@@ -27,8 +27,8 @@ MOCK_CONF_NO_CREDS = {"environment": {"name": "MOCK_ENV"},
                               "user": None,
                               "password": None}}
 
-CASE_NAME = "UNIT_ZZtest_CASE"
-STEP_NAME = "UNIT_ZZtest_STEP"
+CASE_NAME = "UNIT_TEST_CASE"
+STEP_NAME = "UNIT_TEST_STEP"
 
 PREVIOUS_SCENARIO = "previous_scenario"
 PREVIOUS_STEP = "previous_step"
@@ -43,6 +43,14 @@ class MockHttpResponse(object):  # pylint: disable=too-few-public-methods
         self.status_code = status_code
 
 
+API_OK = MockHttpResponse(
+    '{"status": "OK"}',
+    200
+)
+API_KO = MockHttpResponse(
+    '{"message": "API-KO"}',
+    500
+)
 RECORDER_OK = MockHttpResponse(
     '{"environment": "UNIT_TEST",'
     ' "step": "string",'
@@ -97,7 +105,8 @@ class EnergyRecorderTest(unittest.TestCase):
             EnergyRecorder.energy_recorder_api["uri"],
             auth=EnergyRecorder.energy_recorder_api["auth"],
             data=mock.ANY,
-            headers=self.request_headers
+            headers=self.request_headers,
+            timeout=EnergyRecorder.CONNECTION_TIMEOUT
         )
 
     @mock.patch('energy.energy.requests.post',
@@ -110,7 +119,8 @@ class EnergyRecorderTest(unittest.TestCase):
             EnergyRecorder.energy_recorder_api["uri"],
             auth=EnergyRecorder.energy_recorder_api["auth"],
             data=mock.ANY,
-            headers=self.request_headers
+            headers=self.request_headers,
+            timeout=EnergyRecorder.CONNECTION_TIMEOUT
         )
 
     @mock.patch('energy.energy.requests.post',
@@ -123,7 +133,8 @@ class EnergyRecorderTest(unittest.TestCase):
             EnergyRecorder.energy_recorder_api["uri"],
             auth=EnergyRecorder.energy_recorder_api["auth"],
             data=mock.ANY,
-            headers=self.request_headers
+            headers=self.request_headers,
+            timeout=EnergyRecorder.CONNECTION_TIMEOUT
         )
 
     @mock.patch('energy.energy.requests.post',
@@ -136,7 +147,8 @@ class EnergyRecorderTest(unittest.TestCase):
             EnergyRecorder.energy_recorder_api["uri"] + "/step",
             auth=EnergyRecorder.energy_recorder_api["auth"],
             data=mock.ANY,
-            headers=self.request_headers
+            headers=self.request_headers,
+            timeout=EnergyRecorder.CONNECTION_TIMEOUT
         )
 
     @mock.patch('energy.energy.requests.post',
@@ -149,7 +161,8 @@ class EnergyRecorderTest(unittest.TestCase):
             EnergyRecorder.energy_recorder_api["uri"] + "/step",
             auth=EnergyRecorder.energy_recorder_api["auth"],
             data=mock.ANY,
-            headers=self.request_headers
+            headers=self.request_headers,
+            timeout=EnergyRecorder.CONNECTION_TIMEOUT
         )
 
     @mock.patch('energy.energy.requests.post',
@@ -162,7 +175,8 @@ class EnergyRecorderTest(unittest.TestCase):
             EnergyRecorder.energy_recorder_api["uri"] + "/step",
             auth=EnergyRecorder.energy_recorder_api["auth"],
             data=mock.ANY,
-            headers=self.request_headers
+            headers=self.request_headers,
+            timeout=EnergyRecorder.CONNECTION_TIMEOUT
         )
 
     @mock.patch('energy.energy.requests.delete',
@@ -174,7 +188,8 @@ class EnergyRecorderTest(unittest.TestCase):
         delete_mock.assert_called_once_with(
             EnergyRecorder.energy_recorder_api["uri"],
             auth=EnergyRecorder.energy_recorder_api["auth"],
-            headers=self.request_headers
+            headers=self.request_headers,
+            timeout=EnergyRecorder.CONNECTION_TIMEOUT
         )
 
     @mock.patch('energy.energy.requests.delete',
@@ -186,7 +201,8 @@ class EnergyRecorderTest(unittest.TestCase):
         delete_mock.assert_called_once_with(
             EnergyRecorder.energy_recorder_api["uri"],
             auth=EnergyRecorder.energy_recorder_api["auth"],
-            headers=self.request_headers
+            headers=self.request_headers,
+            timeout=EnergyRecorder.CONNECTION_TIMEOUT
         )
 
     @mock.patch('energy.energy.requests.delete',
@@ -198,7 +214,8 @@ class EnergyRecorderTest(unittest.TestCase):
         delete_mock.assert_called_once_with(
             EnergyRecorder.energy_recorder_api["uri"],
             auth=EnergyRecorder.energy_recorder_api["auth"],
-            headers=self.request_headers
+            headers=self.request_headers,
+            timeout=EnergyRecorder.CONNECTION_TIMEOUT
         )
 
     @energy.enable_recording(CASE_NAME)
@@ -266,7 +283,9 @@ class EnergyRecorderTest(unittest.TestCase):
 
     @mock.patch("__builtin__.open", spec=open)
     @mock.patch("yaml.load", return_value=MOCK_CONF)
-    def test_load_config(self, yaml_mock=None, open_mock=None):
+    @mock.patch("energy.energy.requests.get",
+                return_value=API_OK)
+    def test_load_config(self, yaml_mock=None, open_mock=None, get_mock=None):
         """Test load config."""
         EnergyRecorder.energy_recorder_api = None
         EnergyRecorder.load_config()
@@ -278,10 +297,14 @@ class EnergyRecorderTest(unittest.TestCase):
             EnergyRecorder.energy_recorder_api["uri"],
             "mock_url/recorders/environment/MOCK_ENV"
         )
+        self.assertTrue(EnergyRecorder.energy_recorder_api["available"])
 
     @mock.patch("__builtin__.open", spec=open)
     @mock.patch("yaml.load", return_value=MOCK_CONF_NO_CREDS)
-    def test_load_config_no_creds(self, yaml_mock=None, open_mock=None):
+    @mock.patch("energy.energy.requests.get",
+                return_value=API_OK)
+    def test_load_config_no_creds(self, yaml_mock=None,
+                                  open_mock=None, get_mock=None):
         """Test load config without creds."""
         EnergyRecorder.energy_recorder_api = None
         EnergyRecorder.load_config()
@@ -290,6 +313,7 @@ class EnergyRecorderTest(unittest.TestCase):
             EnergyRecorder.energy_recorder_api["uri"],
             "mock_url/recorders/environment/MOCK_ENV"
         )
+        self.assertTrue(EnergyRecorder.energy_recorder_api["available"])
 
     @mock.patch("__builtin__.open", spec=open)
     @mock.patch("yaml.load", side_effect=Exception("load config error"))
@@ -299,6 +323,17 @@ class EnergyRecorderTest(unittest.TestCase):
             EnergyRecorder.energy_recorder_api = None
             EnergyRecorder.load_config()
         self.assertEquals(EnergyRecorder.energy_recorder_api, None)
+
+    @mock.patch("__builtin__.open", spec=open)
+    @mock.patch("yaml.load", return_value=MOCK_CONF)
+    @mock.patch("energy.energy.requests.get",
+                return_value=API_KO)
+    def test_load_config_api_ko(self, loader_mock=None, pod_mock=None,
+                                get_mock=None):
+        """Test load config with API unavailable."""
+        EnergyRecorder.energy_recorder_api = None
+        EnergyRecorder.load_config()
+        self.assertFalse(EnergyRecorder.energy_recorder_api["available"])
 
     @mock.patch("__builtin__.open", spec=open)
     @mock.patch("yaml.load", return_value=MOCK_CONF)
@@ -314,4 +349,7 @@ class EnergyRecorderTest(unittest.TestCase):
 
 if __name__ == "__main__":
     logging.disable(logging.CRITICAL)
+    # logging.basicConfig(level=logging.DEBUG)
+    # logging.getLogger("urllib3.connectionpool").setLevel(level=logging.INFO)
+
     unittest.main(verbosity=2)

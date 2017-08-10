@@ -77,7 +77,7 @@ class EnergyRecorder(object):
     INITIAL_STEP = "running"
 
     # Connection timout to connect recording API
-    CONNECTION_TIMOUT = 1
+    CONNECTION_TIMEOUT = 1
 
     @staticmethod
     def load_config():
@@ -121,7 +121,7 @@ class EnergyRecorder(object):
                         headers={
                             'content-type': 'application/json'
                         },
-                        timeout=EnergyRecorder.CONNECTION_TIMOUT)
+                        timeout=EnergyRecorder.CONNECTION_TIMEOUT)
                     api_available = json.loads(resp.text)["status"] == "OK"
                 except Exception:  # pylint: disable=broad-except
                     EnergyRecorder.logger.error(
@@ -138,7 +138,7 @@ class EnergyRecorder(object):
                 EnergyRecorder.logger.exception(
                     "Error while loading config")
                 raise
-            return EnergyRecorder.energy_recorder_api["available"]
+        return EnergyRecorder.energy_recorder_api["available"]
 
     @staticmethod
     def submit_scenario(scenario, step):
@@ -168,7 +168,8 @@ class EnergyRecorder(object):
                     auth=EnergyRecorder.energy_recorder_api["auth"],
                     headers={
                         'content-type': 'application/json'
-                    }
+                    },
+                    timeout=EnergyRecorder.CONNECTION_TIMEOUT
                 )
                 if response.status_code != 200:
                     EnergyRecorder.logger.info(
@@ -200,6 +201,8 @@ class EnergyRecorder(object):
                     scenario,
                     EnergyRecorder.INITIAL_STEP
                 )
+            else:
+                EnergyRecorder.logger.debug("Load config fails")
 
         except Exception:  # pylint: disable=broad-except
             # Default exception handler to ensure that method
@@ -225,11 +228,12 @@ class EnergyRecorder(object):
                     auth=EnergyRecorder.energy_recorder_api["auth"],
                     headers={
                         'content-type': 'application/json'
-                    }
+                    },
+                    timeout=EnergyRecorder.CONNECTION_TIMEOUT
                 )
                 if response.status_code != 200:
                     EnergyRecorder.logger.error(
-                        "Error while stating energy recording session\n%s",
+                        "Error while starting energy recording session\n%s",
                         response.text)
                     return_status = False
         except Exception:  # pylint: disable=broad-except
@@ -262,7 +266,8 @@ class EnergyRecorder(object):
                     auth=EnergyRecorder.energy_recorder_api["auth"],
                     headers={
                         'content-type': 'application/json'
-                    }
+                    },
+                    timeout=EnergyRecorder.CONNECTION_TIMEOUT
                 )
                 if response.status_code != 200:
                     EnergyRecorder.logger.error(
