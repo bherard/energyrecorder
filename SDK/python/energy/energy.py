@@ -76,6 +76,9 @@ class EnergyRecorder(object):
     # Default initial step
     INITIAL_STEP = "running"
 
+    # Connection timout to connect recording API
+    CONNECTION_TIMOUT = 1
+
     @staticmethod
     def load_config():
         """
@@ -111,16 +114,31 @@ class EnergyRecorder(object):
                     energy_recorder_api_auth = None
                 else:
                     energy_recorder_api_auth = (user, password)
+                try:
+                    resp = requests.get(
+                        energy_recorder_uri + "/monitoring/ping",
+                        auth=energy_recorder_api_auth,
+                        headers={
+                            'content-type': 'application/json'
+                        },
+                        timeout=EnergyRecorder.CONNECTION_TIMOUT)
+                    api_available = json.loads(resp.text)["status"] == "OK"
+                except Exception:  # pylint: disable=broad-except
+                    EnergyRecorder.logger.error(
+                        "Energy recorder API is not available")
+                    api_available = False
 
                 # Final config
                 EnergyRecorder.energy_recorder_api = {
                     "uri": energy_recorder_uri,
-                    "auth": energy_recorder_api_auth
+                    "auth": energy_recorder_api_auth,
+                    "available": api_available
                 }
             except Exception:  # pylint: disable=broad-except
                 EnergyRecorder.logger.exception(
                     "Error while loading config")
                 raise
+            return EnergyRecorder.energy_recorder_api["available"]
 
     @staticmethod
     def submit_scenario(scenario, step):
@@ -132,31 +150,31 @@ class EnergyRecorder(object):
             param step: Step name
             :type step: string
         """
-        return_status = True
         try:
-            EnergyRecorder.logger.debug("Submitting scenario")
             # Ensure that connectyvity settings are loaded
-            EnergyRecorder.load_config()
+            if EnergyRecorder.load_config():
+                return_status = True
+                EnergyRecorder.logger.debug("Submitting scenario")
 
-            # Create API payload
-            payload = {
-                "step": step,
-                "scenario": scenario
-            }
-            # Call API to start energy recording
-            response = requests.post(
-                EnergyRecorder.energy_recorder_api["uri"],
-                data=json.dumps(payload),
-                auth=EnergyRecorder.energy_recorder_api["auth"],
-                headers={
-                    'content-type': 'application/json'
+                # Create API payload
+                payload = {
+                    "step": step,
+                    "scenario": scenario
                 }
-            )
-            if response.status_code != 200:
-                log_msg = "Error while submitting scenario\n{}"
-                log_msg = log_msg.format(response.text)
-                EnergyRecorder.logger.info(log_msg)
-                return_status = False
+                # Call API to start energy recording
+                response = requests.post(
+                    EnergyRecorder.energy_recorder_api["uri"],
+                    data=json.dumps(payload),
+                    auth=EnergyRecorder.energy_recorder_api["auth"],
+                    headers={
+                        'content-type': 'application/json'
+                    }
+                )
+                if response.status_code != 200:
+                    EnergyRecorder.logger.info(
+                        "Error while submitting scenario\n%s",
+                        response.text)
+                    return_status = False
         except Exception:  # pylint: disable=broad-except
             # Default exception handler to ensure that method
             # is safe for caller
@@ -176,11 +194,12 @@ class EnergyRecorder(object):
         """
         return_status = True
         try:
-            EnergyRecorder.logger.debug("Starting recording")
-            return_status = EnergyRecorder.submit_scenario(
-                scenario,
-                EnergyRecorder.INITIAL_STEP
-            )
+            if EnergyRecorder.load_config():
+                EnergyRecorder.logger.debug("Starting recording")
+                return_status = EnergyRecorder.submit_scenario(
+                    scenario,
+                    EnergyRecorder.INITIAL_STEP
+                )
 
         except Exception:  # pylint: disable=broad-except
             # Default exception handler to ensure that method
@@ -198,21 +217,21 @@ class EnergyRecorder(object):
         return_status = True
         try:
             # Ensure that connectyvity settings are loaded
-            EnergyRecorder.load_config()
+            if EnergyRecorder.load_config():
 
-            # Call API to stop energy recording
-            response = requests.delete(
-                EnergyRecorder.energy_recorder_api["uri"],
-                auth=EnergyRecorder.energy_recorder_api["auth"],
-                headers={
-                    'content-type': 'application/json'
-                }
-            )
-            if response.status_code != 200:
-                log_msg = "Error while stating energy recording session\n{}"
-                log_msg = log_msg.format(response.text)
-                EnergyRecorder.logger.error(log_msg)
-                return_status = False
+                # Call API to stop energy recording
+                response = requests.delete(
+                    EnergyRecorder.energy_recorder_api["uri"],
+                    auth=EnergyRecorder.energy_recorder_api["auth"],
+                    headers={
+                        'content-type': 'application/json'
+                    }
+                )
+                if response.status_code != 200:
+                    EnergyRecorder.logger.error(
+                        "Error while stating energy recording session\n%s",
+                        response.text)
+                    return_status = False
         except Exception:  # pylint: disable=broad-except
             # Default exception handler to ensure that method
             # is safe for caller
@@ -229,27 +248,27 @@ class EnergyRecorder(object):
         return_status = True
         try:
             # Ensure that connectyvity settings are loaded
-            EnergyRecorder.load_config()
+            if EnergyRecorder.load_config():
 
-            # Create API payload
-            payload = {
-                "step": step,
-            }
-
-            # Call API to define step
-            response = requests.post(
-                EnergyRecorder.energy_recorder_api["uri"] + "/step",
-                data=json.dumps(payload),
-                auth=EnergyRecorder.energy_recorder_api["auth"],
-                headers={
-                    'content-type': 'application/json'
+                # Create API payload
+                payload = {
+                    "step": step,
                 }
-            )
-            if response.status_code != 200:
-                log_msg = "Error while setting current step of testcase\n{}"
-                log_msg = log_msg.format(response.text)
-                EnergyRecorder.logger.error(log_msg)
-                return_status = False
+
+                # Call API to define step
+                response = requests.post(
+                    EnergyRecorder.energy_recorder_api["uri"] + "/step",
+                    data=json.dumps(payload),
+                    auth=EnergyRecorder.energy_recorder_api["auth"],
+                    headers={
+                        'content-type': 'application/json'
+                    }
+                )
+                if response.status_code != 200:
+                    EnergyRecorder.logger.error(
+                        "Error while setting current step of testcase\n%s",
+                        response.text)
+                    return_status = False
         except Exception:  # pylint: disable=broad-except
             # Default exception handler to ensure that method
             # is safe for caller
@@ -266,26 +285,25 @@ class EnergyRecorder(object):
         return_value = None
         try:
             # Ensure that connectyvity settings are loaded
-            EnergyRecorder.load_config()
+            if EnergyRecorder.load_config():
 
-            # Call API get running scenario
-            response = requests.get(
-                EnergyRecorder.energy_recorder_api["uri"],
-                auth=EnergyRecorder.energy_recorder_api["auth"]
-            )
-            if response.status_code == 200:
-                return_value = json.loads(response.text)
-            elif response.status_code == 404:
-                log_msg = "No current running scenario at {}"
-                log_msg = log_msg.format(
-                    EnergyRecorder.energy_recorder_api["uri"])
-                EnergyRecorder.logger.info(log_msg)
-                return_value = None
-            else:
-                log_msg = "Error while getting current scenario\n{}"
-                log_msg = log_msg.format(response.text)
-                EnergyRecorder.logger.error(log_msg)
-                return_value = None
+                # Call API get running scenario
+                response = requests.get(
+                    EnergyRecorder.energy_recorder_api["uri"],
+                    auth=EnergyRecorder.energy_recorder_api["auth"]
+                )
+                if response.status_code == 200:
+                    return_value = json.loads(response.text)
+                elif response.status_code == 404:
+                    EnergyRecorder.logger.info(
+                        "No current running scenario at %s",
+                        EnergyRecorder.energy_recorder_api["uri"])
+                    return_value = None
+                else:
+                    EnergyRecorder.logger.error(
+                        "Error while getting current scenario\n%s",
+                        response.text)
+                    return_value = None
         except Exception:  # pylint: disable=broad-except
             # Default exception handler to ensure that method
             # is safe for caller
