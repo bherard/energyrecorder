@@ -78,7 +78,7 @@ class EnergyRecorder(object):
     INITIAL_STEP = "running"
 
     # Connection timout to connect recording API
-    CONNECTION_TIMOUT = urllib3.Timeout(connect=1, read=3)
+    CONNECTION_TIMEOUT = urllib3.Timeout(connect=1, read=3)
 
     @staticmethod
     def load_config():
