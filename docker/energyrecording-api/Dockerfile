@@ -12,7 +12,7 @@ RUN apk update;\
     pip install -r recording-api/requirements.txt;\
     mv /entrypoint.sh /influx-entrypoint.sh;
 
-RUN https://raw.githubusercontent.com/bherard/energyrecorder/master/docker/energyrecording-api/recording-api-entrypoint.sh -O /entrypoint.sh;\
+RUN curl https://raw.githubusercontent.com/bherard/energyrecorder/master/docker/energyrecording-api/recording-api-entrypoint.sh -o /entrypoint.sh;\
 	chmod u+x /entrypoint.sh;\
 	wget https://raw.githubusercontent.com/bherard/energyrecorder/master/influx/create-certs.sh -O /usr/local/bin/create-certs.sh;\
 	chmod u+x /usr/local/bin/create-certs.sh;\
