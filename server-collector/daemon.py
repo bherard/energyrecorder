@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # -*- coding: UTF-8 -*-
 """data-collector daemon main code."""
 # --------------------------------------------------------
@@ -34,6 +35,7 @@ from ilocollector import ILOCollector
 from ilo_gui_collector import ILOGUICollector
 from idrac8_gui_collector import IDRAC8GUICollector
 from intel_gui_collector import INTELGUICollector
+from ibmc_gui_collector import IBMCGUICollector
 from ipmicollector import IPMICollector
 from redfishcollector import RedfishCollector
 
@@ -126,6 +128,19 @@ for pod in CONFIG["PODS"]:
                                           server["id"],
                                           intel_server_conf,
                                           CONFIG["RECORDER_API_SERVER"])
+
+        elif server["type"] == "ibmc-gui":
+            ibmc_server_conf = {
+                "base_url": "https://{}".format(server["host"]),
+                "user": server["user"],
+                "pass": server["pass"],
+                "polling_interval": server["polling_interval"]
+
+            }
+            collector = IBMCGUICollector(pod["environment"],
+                                         server["id"],
+                                         ibmc_server_conf,
+                                         CONFIG["RECORDER_API_SERVER"])
 
         elif server["type"] == "redfish":
             ilo_server_conf = {

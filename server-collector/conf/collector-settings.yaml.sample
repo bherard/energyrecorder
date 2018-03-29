@@ -47,6 +47,16 @@ PODS:
     #polling internval in seconds
     polling_interval: 10
 
+	# HUAWEI iBMC  Server (GUI Hacking))
+  - host: server-ip-or-name[:port]
+	# At your choice
+    id: server-id
+    type: intel-gui
+    user: web-console-user
+    pass: web-console-user-password
+    #polling internval in seconds
+    polling_interval: 10
+
 	#redfish server
   - host: server-ip-or-name[:port]
 	# At your choice
