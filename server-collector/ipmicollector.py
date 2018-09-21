@@ -48,6 +48,7 @@ class IPMICollector(Thread):
         "674": "Pwr Consumption",                # DELL
         "5771": "POWER_USAGE",    	             # CISCO
         "343": "PS.* Input Power",               # Intel
+        "2011": "Power[0-9]+",                   # Huawei
     }
 
     def __init__(self,
@@ -258,13 +259,16 @@ class IPMICollector(Thread):
                 log_msg = log_msg.format(exc.returncode, exc.output)
                 self.log.error(log_msg)
             except Exception:  # pylint: disable=locally-disabled,broad-except
+                server_def = self.ipmi_server_conf["host"].split(":")
+                server_addr = server_def[0]
+
                 err_text = sys.exc_info()[0]
                 self.log.debug(traceback.format_exc())
 
                 log_msg = "Error while trying to connect server "
                 log_msg += "{} ({}) for power query: {}"
                 log_msg = log_msg.format(
-                    self.server_id, self.server_addr, err_text)
+                    self.server_id, server_addr, err_text)
 
                 self.log.error(log_msg)
                 self.running = False

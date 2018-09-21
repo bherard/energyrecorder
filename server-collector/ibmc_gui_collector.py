@@ -133,6 +133,7 @@ class IBMCGUICollector(Thread):
                                  verify=False)
         if response.status_code == 200:
             json_str = self.clean_json(response.text)
+            self.log.debug(json_str)
             json_data = json.loads(json_str)
             power = json_data["SysPower"][0]["Power"]
         else:
@@ -147,8 +148,12 @@ class IBMCGUICollector(Thread):
         """Clean returned pseudo JSON by Intel Web Console."""
         self.log.debug("Cleanning returned JSON")
         new_json = str_json.replace("%22", '"')
+        if (new_json[0:1] != "{"):
+            rc = "%s" % (new_json[1:])
+        else:
+            rc = new_json
 
-        return "%s" % (new_json[1:])
+        return rc
 
     def _get_token(self, session_id):
         """Get token from Huawei iBmc"""
