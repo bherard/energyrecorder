@@ -122,6 +122,8 @@ def load_config():
             config = yaml.load(stream)
             settings.BIND = config["BIND"]
             settings.INFLUX = config["INFLUX"]
+            if "ALWAYS_RECORD" in config:
+                settings.ALWAYS_RECORD = config["ALWAYS_RECORD"]
         except yaml.YAMLError:
             LOG.exception("Error while loading config")
             sys.exit()

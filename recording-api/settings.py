@@ -40,3 +40,5 @@ API = {
 
 INFLUX = {}
 BIND = None
+
+ALWAYS_RECORD = False

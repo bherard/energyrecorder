@@ -28,3 +28,7 @@ INFLUX:
     pass: ""
 
 BIND: "0.0.0.0:8888"
+
+# Set ALWAYS_RECORD to True to record Servers comnsuption even 
+# if no running scenario found
+#ALWAYS_RECORD: True

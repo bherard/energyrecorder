@@ -28,10 +28,11 @@ import requests
 
 from flask import request
 from flask_restplus import Resource
+from werkzeug.exceptions import HTTPException, NotFound
 
 import settings
 from api.datamodel import POWER_MEASUREMENT, POWER_POST
-from api.datamodel import NRGPowerMeasurementClass
+from api.datamodel import NRGPowerMeasurementClass, NRGRunningScenarioClass
 from api.restplus import API as api
 from api.endpoints.recorder import Recorder
 
@@ -59,8 +60,20 @@ class ServerConsumption(Resource):
         recorder_manager = Recorder()
 
         time = data.get("time", None)
-        recorder = recorder_manager.load_session(data.get("environment"),
-                                                 time)
+        try:
+            recorder = recorder_manager.load_session(
+                data.get("environment"),
+                time
+            )
+        except NotFound as e:
+            if settings.ALWAYS_RECORD:
+                recorder = NRGRunningScenarioClass(
+                    data.get("environment"),
+                    "n/s",
+                    "n/s"
+                )
+            else:
+                raise e
 
         result = NRGPowerMeasurementClass(recorder.environment,
                                           data.get("power"),
