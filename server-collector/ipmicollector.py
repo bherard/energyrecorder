@@ -49,6 +49,7 @@ class IPMICollector(Thread):
         "5771": "POWER_USAGE",    	             # CISCO
         "343": "PS.* Input Power",               # Intel
         "2011": "Power[0-9]+",                   # Huawei
+        "19048": "Sys Power",                    # Lenovo
     }
 
     def __init__(self,
