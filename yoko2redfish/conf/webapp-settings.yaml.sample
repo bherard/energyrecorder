@@ -1,0 +1,8 @@
+BIND: "0.0.0.0:8889"
+
+YOKOTOOL_PATH: /home/jmjb0521/Dev/energy/yoko-tool
+
+POWERMETERS:
+    - dev: /dev/usbtmc1
+      baudrate: 9600
+      pmtype: wt310
