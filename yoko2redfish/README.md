@@ -6,7 +6,7 @@ It's based on https://github.com/intel/yoko-tool
 
 It's written in python2.7.
 
-# install
+# Install
 This section explain how to install yoko2redfish a linux (debian) box.
 But you can aloso use it as a docker container (see bellow).
 
@@ -94,4 +94,24 @@ Powermeter definition:
 
 `pmtype`: powermeter type (wt310|wt210 see https://github.com/intel/yoko-tool)
 
+# Use
+Once server is configured, use it as regular redfish host from server-collector config
+For host, use the ip-or-name:port where flask server is bind (app launched as standalone flask server).
+
+In case of docker depending on the way you launched the container (`-p` parameter) you'll have to use:
+  * hostname-or-ip-of-host (with -p 80:80)
+  * hostname-or-ip-of-host:port (with -p port:80)
+  * container-ip (not -p parameter)
+
+Ex.:
+```
+PODS:
+ - environment: TEST-YOKO
+   servers:
+   - host: 192.168.2.22
+     id: my-server
+     type: redfish
+     user:
+     pass:
+     polling_interval: 1
 
