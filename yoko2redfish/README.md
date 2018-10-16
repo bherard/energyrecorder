@@ -44,6 +44,31 @@ python app.py
 It should be used with apache or nginx instead.
 If you prefer this second way of doing, please refer to docker install mode.
 
+# Docker
+
+yoko2redfish can be used as a docker container. 
+
+Configuration is quite easy:
+  * Create a local folder to handel config
+  * Launch container with mapping powermeter(s)
+  
+## Local config
+
+Create a local folder for configuration and create config files (and optionaly a log folder):
+```bash
+mkdir -p yoko2redfish/conf
+mkdir -p yoko2redfish/log
+curl https://raw.githubusercontent.com/bherard/energyrecorder/master/yoko2redfish/conf/webapp-logging.conf.sample -o yoko2redfish/conf/webapp-logging.conf
+curl https://raw.githubusercontent.com/bherard/energyrecorder/master/yoko2redfish/conf/webapp-settings.yaml.sample -o yoko2redfish/conf/webapp-settings.yaml
+```
+Check config files as described bellow
+
+## Launch
+```bash
+docker run -d --device /dev/usbtmc1:/dev/usbtmc1 -v <your-location>/yoko2redfis/conf:/usr/local/yoko2redfish/conf [-v <your-location>/yoko2redfis/log:/var/log/yoko2redfish [-p 80:80] --name yoko2redfish bherard/yoko2redfish
+```
+  * use `-v <your-location>/yoko2redfis/log:/var/log/yoko2redfish` if you want to see log from host (see `-v` docker doc). 
+  * use `-p 80:80` to connect redfish pseudo server with host IP on port 80 (see `-p` docker doc)
 # Config files
 Before installing, this section describe the configuration (what ever the install mode is)
 
@@ -53,7 +78,8 @@ In this file  with the line:
 ```
 args=('/var/log/yoko2redfish/yoko2redfish.log', 'a', 100 * 1024 *1024 , 5,)
 ```
-you can set the output log file (here: /var/log/yoko2redfish/yoko2redfish.log) and its size (here 100M)
+you can set the output log file (here: /var/log/yoko2redfish/yoko2redfish.log) and its size (here 100M).
+We recommend you to not change filename in docker mode unless you are aware of what you are doing.
 
 ## App config
 
