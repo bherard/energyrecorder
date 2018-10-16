@@ -46,12 +46,15 @@ you can set the output log file (here: /var/log/yoko2redfish/yoko2redfish.log) a
 
 ## App config
 
-Parameters `BIND`: Define here the listening IP and port when app is lauched directly with python
-Parameters `YOKOTOOL_PATH` : location where yoko-tool where cloned. **DO NOT CHANGE IT IN DOCKER INSTALL MODE**
-Parameters `POWERMETERS`: List of powermeters to aggregate as unique measurement.
+  Parameters `BIND`: Define here the listening IP and port when app is lauched directly with python  
+  Parameters `YOKOTOOL_PATH` : location where yoko-tool where cloned. **DO NOT CHANGE IT IN DOCKER INSTALL MODE**
+  Parameters `POWERMETERS`: List of powermeters to aggregate as unique measurement.
 
-Power meter definition:
+
+Powermeter definition:
+
 `dev`: physical powermeter in /dev ex: /dev/usbtmc1
+
 `pmtype`: powermeter type (wt310|wt210 see https://github.com/intel/yoko-tool)
 
 
