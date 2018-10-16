@@ -33,6 +33,17 @@ cp webapp-logging.conf.sample webapp-logging.conf
 #App configuration
 cp webapp-settings.yaml.sample webapp-settings.yaml
 ```
+
+## Launch
+Check configuration as described bellow and launch the server:
+```bash
+cd <folder-where-energyrecord-is-cloned>/yoko2redfish
+python app.py
+```
+**NOTE:** This launch a threaded flask server witch not recommanded for heavy load. In our case, load should be low, but  this way of working is not recommended as best practice with flask server.
+It should be used with apache or nginx instead.
+If you prefer this second way of doing, please refer to docker install mode.
+
 # Config files
 Before installing, this section describe the configuration (what ever the install mode is)
 
