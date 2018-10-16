@@ -86,6 +86,20 @@ class RedfishCollector(Thread):
         self.running = False
         self.log = logging.getLogger(__name__)
 
+    def _is_https(self,):
+        """Try to determine if host is using https or not."""
+
+        try:
+            url = self.redfish_server_conf["base_url"]
+            self.log.debug("trying to call %s", url)
+            requests.get(url, verify=False)
+            return True
+        except requests.exceptions.ConnectionError:
+            url = url.replace("https", "http")
+            self.log.debug("trying to call %s", url)
+            requests.get(url)
+            return False
+
     def stop(self):
         """
         Stop running Thread.
@@ -105,12 +119,24 @@ class RedfishCollector(Thread):
         while chassis_list is None and self.running:
             try:
                 request_url = self.redfish_server_conf["base_url"]
-                request_url += "/redfish/v1/Chassis"
+                request_url += "/redfish/v1/Chassis/"
                 response = requests.get(request_url,
                                         auth=self.pod_auth,
                                         verify=False)
-                self.log.debug("Chassis list at " + request_url)
-                chassis_list = json.loads(response.text)
+                self.log.debug(
+                    "Chassis list at %s ",
+                    request_url
+                )
+                if response.status_code != 200:
+                    self.log.error(
+                        "Error while calling %s\nHTTP STATUS=%d\nHTTP BODY=%s",
+                        request_url,
+                        response.status_code,
+                        response.text
+                    )
+                    self.running = False
+                else:
+                    chassis_list = json.loads(response.text)
             except Exception:  # pylint: disable=locally-disabled,broad-except
                 log_msg = "Error while trying to connect server {} ({}): {}"
                 log_msg = log_msg.format(self.server_id,
@@ -128,10 +154,10 @@ class RedfishCollector(Thread):
         rqt_url = self.redfish_server_conf["base_url"]
         rqt_url += chassis_uri
         rqt_url += "Power/"
+        self.log.debug("Power at " + rqt_url)
         response = requests.get(rqt_url,
                                 auth=self.pod_auth,
                                 verify=False)
-        self.log.debug("Power at " + rqt_url)
         power_metrics = json.loads(response.text)
 
         return power_metrics["PowerControl"][0]["PowerConsumedWatts"]
@@ -139,6 +165,11 @@ class RedfishCollector(Thread):
     def run(self):
         """Thread main code."""
         self.running = True
+
+        if not self._is_https():
+            self.redfish_server_conf["base_url"] = (
+                self.redfish_server_conf["base_url"].replace("https", "http")
+            )
 
         chassis_list = self.load_chassis_list()
         # Iterate for ever, or near....
