@@ -40,7 +40,7 @@ class YokoThread(threading.Thread):
         self.power = 0
         threading.Thread.__init__(self)
  
-    def _get_power_from_yoko(self, dev, baudrate, pmtype, yokopath):
+    def _get_power_from_yoko(self, dev, pmtype, yokopath):
         """Get power from yoko."""
 
         sys_cmd = (
@@ -49,7 +49,6 @@ class YokoThread(threading.Thread):
             "/yokotool " +
             dev +
             " --pmtype=" + pmtype +
-            " --baudrate=" + str(baudrate) +
             " read P --count=1"
         )
         data = subprocess.check_output(
@@ -64,7 +63,6 @@ class YokoThread(threading.Thread):
     def run(self):
         self.power = self._get_power_from_yoko(
             self._pm["dev"],
-            self._pm["baudrate"],
             self._pm["pmtype"],
             self._yokopath
         )
