@@ -105,7 +105,7 @@ def get_collector(server, pod):
             "base_url": "https://{}".format(server["host"]),
             "user": server["user"],
             "pass": server["pass"],
-            "polling_interval": server["polling_interval"]
+            "sync_condition": poller_conf["sync_condition"]
 
         }
         the_collector = ILOCollector(
@@ -119,7 +119,7 @@ def get_collector(server, pod):
             "base_url": "https://{}".format(server["host"]),
             "user": server["user"],
             "pass": server["pass"],
-            "polling_interval": server["polling_interval"]
+            "sync_condition": poller_conf["sync_condition"]
 
         }
         the_collector = ILOGUICollector(
@@ -134,7 +134,7 @@ def get_collector(server, pod):
             "base_url": "https://{}".format(server["host"]),
             "user": server["user"],
             "pass": server["pass"],
-            "polling_interval": server["polling_interval"]
+            "sync_condition": poller_conf["sync_condition"]
 
         }
         the_collector = IDRAC8GUICollector(
@@ -149,7 +149,7 @@ def get_collector(server, pod):
             "base_url": "https://{}".format(server["host"]),
             "user": server["user"],
             "pass": server["pass"],
-            "polling_interval": server["polling_interval"]
+            "sync_condition": poller_conf["sync_condition"]
 
         }
         the_collector = INTELGUICollector(
@@ -164,7 +164,7 @@ def get_collector(server, pod):
             "base_url": "https://{}".format(server["host"]),
             "user": server["user"],
             "pass": server["pass"],
-            "polling_interval": server["polling_interval"]
+            "sync_condition": poller_conf["sync_condition"]
 
         }
         the_collector = IBMCGUICollector(
@@ -191,7 +191,7 @@ def get_collector(server, pod):
             "host": server["host"],
             "user": server["user"],
             "pass": server["pass"],
-            "polling_interval": server["polling_interval"]
+            "sync_condition": poller_conf["sync_condition"]
         }
 
         the_collector = IPMICollector(
