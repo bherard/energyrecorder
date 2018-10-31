@@ -131,9 +131,8 @@ class Collector(Thread):
             try:
                 power = self.get_power()
                 self.log.debug(
-                    "Got power form %s (%s): %s",
+                    "Got power form %s : %s",
                     self.server_id,
-                    self.server_conf["base_url"],
                     str(power)
                 )
                 if power is not None and power != 0:
@@ -156,22 +155,17 @@ class Collector(Thread):
                     data_poster.start()
                 else:
                     self.log.info(
-                        "Didn't got power from %s (%s)",
+                        "Didn't got power from %s",
                         self.server_id,
-                        self.server_conf["base_url"]
                     )
             except Exception:  # pylint: disable=broad-except
                 # No: default case
-                err_text = sys.exc_info()[0]
-                log_msg = "Error while trying to connect server {} ({}) \
-                            for power query: {}"
-                log_msg = log_msg.format(
+                self.log.error(
+                    "Error while trying to connect server %s for power query: %s",
                     self.server_id,
-                    self.server_conf["base_url"],
-                    err_text
+                    sys.exc_info()[0]
                 )
                 self.log.debug(traceback.format_exc())
-                self.log.error(err_text)
 
         self.post_run()
         self.log.debug(
