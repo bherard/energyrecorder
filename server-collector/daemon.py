@@ -3,7 +3,7 @@
 """data-collector daemon main code."""
 # --------------------------------------------------------
 # Module Name : terraHouat  power recording ILO daemon
-# Version : 1.0
+# Version : 1.1
 #
 # Software Name : Open NFV functest
 # Version :
@@ -23,12 +23,15 @@
 # -------------------------------------------------------
 # History     :
 # 1.0.0 - 2017-02-20 : Release of the file
+# 1.1.0 - 2018-10-26 : Add feature to synchronize polling of different threads
 ##
 import logging.config
 import traceback
 import time
 import signal
 import sys
+import threading
+from threading import Thread
 import yaml
 
 from ilocollector import ILOCollector
@@ -40,22 +43,178 @@ from ipmicollector import IPMICollector
 from redfishcollector import RedfishCollector
 
 
+class Poller(Thread):
+    """Execute synchronized polling opn a set of collectors."""
+
+    def __init__(self, conf):
+        """Initialize polling thread."""
+        Thread.__init__(self)
+        self.logger = logging.getLogger(__name__)
+        self.conf = conf
+        self.running = False
+
+    def stop(self):
+        """Request stop on running thread."""
+        self.running = False
+
+    def run(self):
+        self.running = True
+        condition = self.conf["sync_condition"]
+
+        for _collector in self.conf["collectors"]:
+            _collector.start()
+
+        while self.running:
+            condition.acquire()
+            condition.notify_all()
+            condition.release()
+
+            time.sleep(self.conf["polling_interval"])
+
+        self.logger.debug("Stoping collectors for poller")
+        for _collector in self.conf["collectors"]:
+            _collector.stop()
+
+        condition.acquire()
+        condition.notify_all()
+        condition.release()
+
+        self.logger.debug("Waiting for collectors to stop")
+        for _collector in self.conf["collectors"]:
+            collector.join()
+        self.logger.debug("Poller stoped")
+
+
 def signal_term_handler():
     """Sigterm signal handler."""
-    for running_thread in SERVER_THREADS:
-        msg = "Stopping thread for server {}".format(collector.server_id)
+    for running_thread in POLLERS:
+        msg = "Stopping thread for poller"
         LOG.info(msg)
         running_thread.stop()
-    LOG.info("Please wait....")
-    for running_thread in SERVER_THREADS:
+    LOG.info("Waiting for pollers to stop....")
+    for running_thread in POLLERS:
         running_thread.join()
     LOG.info("Program terminated")
 
 
+def get_collector(server, pod):
+    """Get proper collector instance."""
+
+    if server["type"] == "ilo":
+        ilo_server_conf = {
+            "base_url": "https://{}".format(server["host"]),
+            "user": server["user"],
+            "pass": server["pass"],
+            "polling_interval": server["polling_interval"]
+
+        }
+        the_collector = ILOCollector(
+            pod["environment"],
+            server["id"],
+            ilo_server_conf,
+            CONFIG["RECORDER_API_SERVER"]
+        )
+    elif server["type"] == "ilo-gui":
+        ilo_server_conf = {
+            "base_url": "https://{}".format(server["host"]),
+            "user": server["user"],
+            "pass": server["pass"],
+            "polling_interval": server["polling_interval"]
+
+        }
+        the_collector = ILOGUICollector(
+            pod["environment"],
+            server["id"],
+            ilo_server_conf,
+            CONFIG["RECORDER_API_SERVER"]
+        )
+
+    elif server["type"] == "idrac8-gui":
+        idrac_server_conf = {
+            "base_url": "https://{}".format(server["host"]),
+            "user": server["user"],
+            "pass": server["pass"],
+            "polling_interval": server["polling_interval"]
+
+        }
+        the_collector = IDRAC8GUICollector(
+            pod["environment"],
+            server["id"],
+            idrac_server_conf,
+            CONFIG["RECORDER_API_SERVER"]
+        )
+
+    elif server["type"] == "intel-gui":
+        intel_server_conf = {
+            "base_url": "https://{}".format(server["host"]),
+            "user": server["user"],
+            "pass": server["pass"],
+            "polling_interval": server["polling_interval"]
+
+        }
+        the_collector = INTELGUICollector(
+            pod["environment"],
+            server["id"],
+            intel_server_conf,
+            CONFIG["RECORDER_API_SERVER"]
+        )
+
+    elif server["type"] == "ibmc-gui":
+        ibmc_server_conf = {
+            "base_url": "https://{}".format(server["host"]),
+            "user": server["user"],
+            "pass": server["pass"],
+            "polling_interval": server["polling_interval"]
+
+        }
+        the_collector = IBMCGUICollector(
+            pod["environment"],
+            server["id"],
+            ibmc_server_conf,
+            CONFIG["RECORDER_API_SERVER"]
+        )
+
+    elif server["type"] == "redfish":
+        server_conf = {
+            "base_url": "https://{}".format(server["host"]),
+            "user": server["user"],
+            "pass": server["pass"],
+            "poller_name": poller_conf["name"],
+            "sync_condition": poller_conf["sync_condition"]
+        }
+        the_collector = RedfishCollector(
+            pod["environment"],
+            server["id"],
+            server_conf,
+            CONFIG["RECORDER_API_SERVER"])
+    elif server["type"] == "ipmi":
+        ipmi_server_conf = {
+            "host": server["host"],
+            "user": server["user"],
+            "pass": server["pass"],
+            "polling_interval": server["polling_interval"]
+        }
+
+        the_collector = IPMICollector(
+            pod["environment"],
+            server["id"],
+            ipmi_server_conf,
+            CONFIG["RECORDER_API_SERVER"]
+        )
+    else:
+        msg = "Unsupported power collect method: {}"
+        msg += msg.format(server["type"])
+        raise Exception(msg)
+
+    return the_collector
+
+
 # Activate signal handler for SIGTERM
 signal.signal(signal.SIGTERM, signal_term_handler)
-# Create running thead list object
-SERVER_THREADS = []
+
+# Create a list of active pollers
+POLLERS = []
+
 # Configure logging
 logging.config.fileConfig("conf/collector-logging.conf")
 LOG = logging.getLogger(__name__)
@@ -69,114 +228,44 @@ with open("conf/collector-settings.yaml", 'r') as stream:
         LOG.exception("Error while loading config")
         sys.exit()
 
-for pod in CONFIG["PODS"]:
+for a_pod in CONFIG["PODS"]:
     log_msg = "Starting collector threads for pod {}"
-    log_msg = log_msg.format(pod["environment"])
+    log_msg = log_msg.format(a_pod["environment"])
     LOG.info(log_msg)
 
-    for server in pod["servers"]:
-        log_msg = "\tStarting thread collector for server {}"
-        log_msg = log_msg.format(server["id"])
-        LOG.info(log_msg)
-        if server["type"] == "ilo":
-            ilo_server_conf = {
-                "base_url": "https://{}".format(server["host"]),
-                "user": server["user"],
-                "pass": server["pass"],
-                "polling_interval": server["polling_interval"]
+    poller_conf = {
+        "polling_interval": a_pod["polling_interval"],
+        "sync_condition": threading.Condition(),
+        "name": "default",
+        "collectors": [],
+        "active": True
+    }
 
-            }
-            collector = ILOCollector(pod["environment"],
-                                     server["id"],
-                                     ilo_server_conf,
-                                     CONFIG["RECORDER_API_SERVER"])
-        elif server["type"] == "ilo-gui":
-            ilo_server_conf = {
-                "base_url": "https://{}".format(server["host"]),
-                "user": server["user"],
-                "pass": server["pass"],
-                "polling_interval": server["polling_interval"]
+    if "active" in a_pod:
+        poller_conf["active"] = a_pod["active"]
 
-            }
-            collector = ILOGUICollector(pod["environment"],
-                                        server["id"],
-                                        ilo_server_conf,
-                                        CONFIG["RECORDER_API_SERVER"])
+    if poller_conf["active"]:
+        for srv in a_pod["servers"]:
+            if "active" not in srv or srv["active"]:
+                collector = get_collector(srv, a_pod)
+                poller_conf["collectors"].append(collector)
+            else:
+                LOG.info(
+                    "Server %s is not active: skipping",
+                    srv["id"]
+                )
 
-        elif server["type"] == "idrac8-gui":
-            idrac_server_conf = {
-                "base_url": "https://{}".format(server["host"]),
-                "user": server["user"],
-                "pass": server["pass"],
-                "polling_interval": server["polling_interval"]
-
-            }
-            collector = IDRAC8GUICollector(pod["environment"],
-                                           server["id"],
-                                           idrac_server_conf,
-                                           CONFIG["RECORDER_API_SERVER"])
-
-        elif server["type"] == "intel-gui":
-            intel_server_conf = {
-                "base_url": "https://{}".format(server["host"]),
-                "user": server["user"],
-                "pass": server["pass"],
-                "polling_interval": server["polling_interval"]
-
-            }
-            collector = INTELGUICollector(pod["environment"],
-                                          server["id"],
-                                          intel_server_conf,
-                                          CONFIG["RECORDER_API_SERVER"])
-
-        elif server["type"] == "ibmc-gui":
-            ibmc_server_conf = {
-                "base_url": "https://{}".format(server["host"]),
-                "user": server["user"],
-                "pass": server["pass"],
-                "polling_interval": server["polling_interval"]
-
-            }
-            collector = IBMCGUICollector(pod["environment"],
-                                         server["id"],
-                                         ibmc_server_conf,
-                                         CONFIG["RECORDER_API_SERVER"])
-
-        elif server["type"] == "redfish":
-            ilo_server_conf = {
-                "base_url": "https://{}".format(server["host"]),
-                "user": server["user"],
-                "pass": server["pass"],
-                "polling_interval": server["polling_interval"]
-
-            }
-            collector = RedfishCollector(
-                pod["environment"],
-                server["id"],
-                ilo_server_conf,
-                CONFIG["RECORDER_API_SERVER"])
-        elif server["type"] == "ipmi":
-            ipmi_server_conf = {
-                "host": server["host"],
-                "user": server["user"],
-                "pass": server["pass"],
-                "polling_interval": server["polling_interval"]
-            }
-
-            collector = IPMICollector(pod["environment"],
-                                      server["id"],
-                                      ipmi_server_conf,
-                                      CONFIG["RECORDER_API_SERVER"])
-        else:
-            raise Exception(
-                "Unsupported power collect method: {}".format(server["type"]))
-
-        SERVER_THREADS.append(collector)
-        collector.start()
+        poller = Poller(poller_conf)
+        POLLERS.append(poller)
+        poller.start()
+    else:
+        LOG.info(
+            "Environment %s is not active: skipping",
+            a_pod["environment"]
+        )
 
 try:
     while True:
-        # Wait for ever unless we receive a SIGTEM (see signal_term_handler)
         time.sleep(1)
 except KeyboardInterrupt:
     signal_term_handler()
@@ -186,7 +275,3 @@ except Exception:  # pylint: disable=locally-disabled,broad-except
     MSG = "Unexpected error: {}".format(traceback.format_exc())
     LOG.error(MSG)
     signal_term_handler()
-
-# Wait for the end of running threads
-for thread in SERVER_THREADS:
-    thread.join()
