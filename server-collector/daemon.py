@@ -229,14 +229,26 @@ with open("conf/collector-settings.yaml", 'r') as stream:
         sys.exit()
 
 for a_pod in CONFIG["PODS"]:
-    log_msg = "Starting collector threads for pod {}"
-    log_msg = log_msg.format(a_pod["environment"])
-    LOG.info(log_msg)
+    LOG.info(
+        "Loading configuration for pod %s",
+        a_pod["environment"]
+    )
+
+    if "polling_interval" not in a_pod:
+        polling_interval = 10
+        LOG.warn(
+            "\n\n*******************************\n\n"
+            "\"polling_interval\" is not set in PODS definition yaml file "
+            "(at environment level) using default setting: %ds "
+            "\n\n*******************************\n\n",
+            polling_interval
+        )
+    else:
+        polling_interval = a_pod["polling_interval"]
 
     poller_conf = {
-        "polling_interval": a_pod["polling_interval"],
+        "polling_interval": polling_interval,
         "sync_condition": threading.Condition(),
-        "name": "default",
         "collectors": [],
         "active": True
     }
@@ -257,6 +269,11 @@ for a_pod in CONFIG["PODS"]:
 
         poller = Poller(poller_conf)
         POLLERS.append(poller)
+
+        LOG.info(
+            "Starting poller threads for pod %s",
+            a_pod["environment"]
+        )
         poller.start()
     else:
         LOG.info(
