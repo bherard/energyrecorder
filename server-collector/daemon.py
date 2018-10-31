@@ -179,7 +179,6 @@ def get_collector(server, pod):
             "base_url": "https://{}".format(server["host"]),
             "user": server["user"],
             "pass": server["pass"],
-            "poller_name": poller_conf["name"],
             "sync_condition": poller_conf["sync_condition"]
         }
         the_collector = RedfishCollector(
