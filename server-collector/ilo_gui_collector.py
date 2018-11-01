@@ -50,11 +50,13 @@ class ILOGUICollector(Collector):
             power_metter = json.loads(response.text)
             return power_metter
         else:
-            log_msg = "Can't get power from ILO at "
-            log_msg += self.server_conf["base_url"]
-            self.log.error(log_msg)
-            self.log.debug(response.text)
-            raise Exception(log_msg)
+            self.log.error(
+                "[%s]: Can't get power from ILO at %s",
+                self.name,
+                self.server_conf["base_url"]
+            )
+            self.log.debug("[%s]: %s", self.name, response.text)
+            raise Exception("Can't get power from ILO")
 
     def login(self):
         """Get session_key from ILO."""
@@ -73,11 +75,13 @@ class ILOGUICollector(Collector):
             json_object = json.loads(response.text)
             return json_object["session_key"]
         else:
-            log_msg = "Can't connect ILO at "
-            log_msg += self.server_conf["base_url"]
-            self.log.error(log_msg)
-            self.log.debug(response.text)
-            raise Exception(log_msg)
+            self.log.error(
+                "[%s]: Can't connect ILO at %s",
+                self.name,
+                self.server_conf["base_url"]
+            )
+            self.log.debug("[%s]: %s", self.name, response.text)
+            raise Exception("Can't connect ILO")
 
     def logout(self, session_key):
         """Logout from ILO."""
@@ -96,7 +100,7 @@ class ILOGUICollector(Collector):
                                  cookies=cookies,
                                  verify=False)
         if response.status_code != 200:
-            self.log.debug(response.text)
+            self.log.debug("[%s]: %s", self.name, response.text)
 
     def get_power(self):
         """Get power from ILO GUI."""
@@ -110,14 +114,11 @@ class ILOGUICollector(Collector):
             power = power_metter['samples'][0]['avg']
         except Exception:  # pylint: disable=broad-except
             # Was it and error from ILO?
-            err_text = sys.exc_info()[0]
-            log_msg = "Error while trying to connect server {} ({}) \
-                        for power query: {}"
-            log_msg = log_msg.format(
-                self.server_id,
+            self.log.debug("[%s]: %s", self.name, traceback.format_exc())
+            self.log.error(
+                "[%s]: Error while trying to connect server (%s): %s",
+                self.name,
                 self.server_conf["base_url"],
-                err_text
+                sys.exc_info()[0]
             )
-            self.log.debug(traceback.format_exc())
-            self.log.error(err_text)
         return power

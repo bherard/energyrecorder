@@ -55,8 +55,11 @@ class IPMICollector(Collector):
 
     def get_manufacturer_id(self):
         """Get Manufacturer id from IPMI."""
-        self.log.debug("Getting manufacturer for server %s",
-                       self.server_conf["host"])
+        self.log.debug(
+            "[%s]: Getting manufacturer for server %s",
+            self.name,
+            self.server_conf["host"]
+        )
         try:
             server_def = self.server_conf["host"].split(":")
             server_addr = server_def[0]
@@ -82,16 +85,26 @@ class IPMICollector(Collector):
                 m_id = m_id.strip(' \t\n\r')
                 return m_id
         except subprocess.CalledProcessError as exc:
-            log_msg = "IPMI Error: rc={} err={}".format(exc.returncode,
-                                                        exc.output)
-            self.log.error(log_msg)
+            self.log.error(
+                "[%s]: IPMI Error: rc=%d err=%s",
+                self.name,
+                exc.returncode,
+                exc.output
+            )
             return "none"
 
     def get_sensors(self, manufacturer):
         """Return Power sensors list."""
-        self.log.debug("Getting sensors from manufacturer '%s'", manufacturer)
         self.log.debug(
-            "Manufacturer IPMI pattern is '%s'", self.grammar[manufacturer])
+            "[%s]: Getting sensors from manufacturer '%s'",
+            self.name,
+            manufacturer
+        )
+        self.log.debug(
+            "[%s]: Manufacturer IPMI pattern is '%s'",
+            self.name,
+            self.grammar[manufacturer]
+        )
         server_def = self.server_conf["host"].split(":")
         if len(server_def) > 1:
             bridge_cmd = " -t " + server_def[1]
@@ -113,9 +126,12 @@ class IPMICollector(Collector):
         result = []
         for val in s_list:
             sensor = val.rstrip()
-            self.log.debug("\tFound sensor %s from manufacturer %s",
-                           sensor,
-                           manufacturer)
+            self.log.debug(
+                "[%s]: \tFound sensor %s from manufacturer %s",
+                self.name,
+                sensor,
+                manufacturer
+            )
             result.append(sensor)
         return result
 
@@ -153,7 +169,8 @@ class IPMICollector(Collector):
                 if str_power != "":
                     sensor_power = int(float(str_power))
                     self.log.debug(
-                        "\tGot power '%s' from sensor '%s' for %s",
+                        "[%s]: \tGot power '%s' from sensor '%s' for %s",
+                        self.name,
                         sensor_power,
                         sensor,
                         server_def[0]
@@ -161,34 +178,34 @@ class IPMICollector(Collector):
                     power += sensor_power
             except subprocess.CalledProcessError as exc:
                 if exc.returncode == 1:
-                    self.log.debug("Wrong sensor: %s", sensor)
+                    self.log.debug("[%s]: Wrong sensor: %s", self.name, sensor)
                     continue
                 else:
-                    log_msg = "IPMI Error while trying to get Power data"
-                    log_msg += " for %s (%s): rc=%d err=%s"
                     self.log.error(
-                        log_msg,
-                        self.server_conf["id"],
+                        "[%s]: IPMI Error while trying to get Power data "
+                        " (%s): rc=%d err=%s",
+                        self.name,
                         server_def[0],
                         exc.returncode,
                         exc.output
                     )
 
-        self.log.debug("Global power is %d", power)
+        self.log.debug("[%s]: Global power is %d", self.name, power)
         return power
 
     def pre_run(self):
         """Thread main code."""
-        self.running = True
 
         manufacturer = self.get_manufacturer_id()
         if manufacturer not in self.grammar:
-            log_msg = "Manufacturer ID {} not supported".format(manufacturer)
-            self.log.error(log_msg)
-            self.running = False
+            self.log.error(
+                "[%s]: Manufacturer ID %s not supported",
+                self.name,
+                manufacturer
+            )
         else:
             self._sensors = self.get_sensors(manufacturer)
-            self.log.debug("Main thread is starting....")
+            self.log.debug("[%s]: Main thread is starting....", self.name)
 
     def get_power(self):
         """Get power with IPMI."""
@@ -198,25 +215,30 @@ class IPMICollector(Collector):
             if power is not None:
                 return power
             else:
-                log_msg = "Power consumption is not avaliable via IPMI"
-                self.log.error(log_msg)
+                self.log.error(
+                    "[%s]: Power consumption is not avaliable via IPMI",
+                    self.name
+                )
                 return 0
         except subprocess.CalledProcessError as exc:
-            log_msg = "IPMI Error while trying to get Power data: "
-            log_msg += "rc={} err={}"
-            log_msg = log_msg.format(exc.returncode, exc.output)
-            self.log.error(log_msg)
+            self.log.error(
+                "[%s]: IPMI Error while trying to get Power data: "
+                "rc=%d err=%s",
+                self.name,
+                exc.returncode,
+                exc.output
+            )
         except Exception:  # pylint: disable=locally-disabled,broad-except
             server_def = self.server_conf["host"].split(":")
             server_addr = server_def[0]
 
             err_text = sys.exc_info()[0]
-            self.log.debug(traceback.format_exc())
+            self.log.debug("[%s]: %s", self.name, traceback.format_exc())
 
-            log_msg = "Error while trying to connect server "
-            log_msg += "{}  in group {} ({}) for power query: {}"
-            log_msg = log_msg.format(
-                self.server_id, self.sync_group, server_addr, err_text)
-
-            self.log.error(log_msg)
-            self.running = False
+            self.log.error(
+                "[%s]: Error while trying to connect server "
+                "(%s) for power query: %s",
+                self.name,
+                server_addr,
+                err_text
+            )

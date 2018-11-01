@@ -48,12 +48,20 @@ class RedfishCollector(Collector):
 
         try:
             url = self.server_conf["base_url"]
-            self.log.debug("trying to call %s", url)
+            self.log.debug(
+                "[%s]: trying to call %s",
+                self.name,
+                url
+            )
             requests.get(url, verify=False)
             return True
         except requests.exceptions.ConnectionError:
             url = url.replace("https", "http")
-            self.log.debug("trying to call %s", url)
+            self.log.debug(
+                "[%s]: trying to call %s",
+                self.name,
+                url
+            )
             requests.get(url)
             return False
 
@@ -75,7 +83,9 @@ class RedfishCollector(Collector):
                 )
                 if response.status_code != 200:
                     self.log.error(
-                        "Error while calling %s\nHTTP STATUS=%d\nHTTP BODY=%s",
+                        "[%s]: Error while calling %s\nHTTP "
+                        "STATUS=%d\nHTTP BODY=%s",
+                        self.name,
                         request_url,
                         response.status_code,
                         response.text
@@ -84,12 +94,17 @@ class RedfishCollector(Collector):
                 else:
                     chassis_list = json.loads(response.text)
             except Exception:  # pylint: disable=locally-disabled,broad-except
-                log_msg = "Error while trying to connect server {} ({}): {}"
-                log_msg = log_msg.format(self.server_id,
-                                         self.server_conf["base_url"],
-                                         sys.exc_info()[0])
-                self.log.error(log_msg)
-                self.log.debug(traceback.format_exc())
+                self.log.error(
+                    "[%s]: Error while trying to connect server (%s): %s)",
+                    self.name,
+                    self.server_conf["base_url"],
+                    sys.exc_info()[0]
+                )
+                self.log.debug(
+                    "[%s]: %s",
+                    self.name,
+                    traceback.format_exc()
+                )
                 time.sleep(5)
         return chassis_list
 
@@ -100,7 +115,11 @@ class RedfishCollector(Collector):
         rqt_url = self.server_conf["base_url"]
         rqt_url += chassis_uri
         rqt_url += "Power/"
-        self.log.debug("Power at %s", rqt_url)
+        self.log.debug(
+            "[%s]: Power at %s",
+            self.name,
+            rqt_url
+        )
         response = requests.get(rqt_url,
                                 auth=self.pod_auth,
                                 verify=False)
@@ -132,12 +151,19 @@ class RedfishCollector(Collector):
                 log_msg = "Error while trying to connect server {} ({}) \
                             for power query: {}"
                 log_msg = log_msg.format(
-                    self.server_id,
+                    self.name,
                     self.server_conf["base_url"],
                     err_text
                 )
-                self.log.debug(traceback.format_exc())
-                self.log.error(err_text)
+                self.log.debug(
+                    "[%s]: %s",
+                    self.name,
+                    traceback.format_exc()
+                )
+                self.log.error(
+                    "[%s]: %s",
+                    self.name, err_text
+                )
                 return 0
 
         return power

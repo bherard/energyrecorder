@@ -43,6 +43,10 @@ from ipmicollector import IPMICollector
 from redfishcollector import RedfishCollector
 
 
+# Create a list of active pollers
+POLLERS = []
+
+
 class Poller(Thread):
     """Execute synchronized polling opn a set of collectors."""
 
@@ -52,36 +56,64 @@ class Poller(Thread):
         self.logger = logging.getLogger(__name__)
         self.conf = conf
         self.running = False
+        self.condition = threading.Condition()
+        if self.conf["polling_interval"] <= 0:
+            self.conf["polling_interval"] = 0.1
+
+    def notity_collectors(self):
+        """Notify collectors to execute power reading."""
+        self.condition.acquire()
+        self.condition.notify_all()
+        self.condition.release()
 
     def stop(self):
         """Request stop on running thread."""
         self.running = False
 
+    def _interruptible_sleep(self, duration):
+        """Execute fragmeted sleep to be interruptible by signals."""
+        if duration > 0.1:
+            sleep_duration = 0.1
+        else:
+            sleep_duration = duration
+        spend_time = 0
+        while spend_time <= duration and self.running:
+            time.sleep(sleep_duration)
+            spend_time += sleep_duration
+
     def run(self):
         self.running = True
-        condition = self.conf["sync_condition"]
 
+        # Start all collect threads
         for _collector in self.conf["collectors"]:
+            _collector.condition = self.condition
             _collector.start()
 
-        while self.running:
-            condition.acquire()
-            condition.notify_all()
-            condition.release()
+        # Ensure colelctors are ready (i.e all pre_run executed)
+        for _collector in self.conf["collectors"]:
+            while not _collector.ready:
+                time.sleep(0.1)
 
-            time.sleep(self.conf["polling_interval"])
+        # Loop until stop was resquested
+        while self.running:
+            # Notfy Collector threads to get power
+            self.notity_collectors()
+
+            # Wait for polling interval
+            self._interruptible_sleep(self.conf["polling_interval"])
 
         self.logger.debug("Stoping collectors for poller")
+        # Request stop for all collector threads
         for _collector in self.conf["collectors"]:
             _collector.stop()
 
-        condition.acquire()
-        condition.notify_all()
-        condition.release()
+        # Notify colelctors eventualy stuck on condition
+        self.notity_collectors()
 
+        # Wait for collectors to stop
         self.logger.debug("Waiting for collectors to stop")
         for _collector in self.conf["collectors"]:
-            collector.join()
+            _collector.join()
         self.logger.debug("Poller stoped")
 
 
@@ -89,205 +121,213 @@ def signal_term_handler():
     """Sigterm signal handler."""
     for running_thread in POLLERS:
         msg = "Stopping thread for poller"
-        LOG.info(msg)
+        logging.info(msg)
         running_thread.stop()
-    LOG.info("Waiting for pollers to stop....")
+    logging.info("Waiting for pollers to stop....")
     for running_thread in POLLERS:
         running_thread.join()
-    LOG.info("Program terminated")
+    logging.info("Program terminated")
 
 
-def get_collector(server, pod):
+def get_collector(server, pod, config):
     """Get proper collector instance."""
 
     if server["type"] == "ilo":
         ilo_server_conf = {
             "base_url": "https://{}".format(server["host"]),
             "user": server["user"],
-            "pass": server["pass"],
-            "sync_condition": poller_conf["sync_condition"]
-
+            "pass": server["pass"]
         }
         the_collector = ILOCollector(
             pod["environment"],
             server["id"],
             ilo_server_conf,
-            CONFIG["RECORDER_API_SERVER"]
+            config["RECORDER_API_SERVER"]
         )
     elif server["type"] == "ilo-gui":
         ilo_server_conf = {
             "base_url": "https://{}".format(server["host"]),
             "user": server["user"],
-            "pass": server["pass"],
-            "sync_condition": poller_conf["sync_condition"]
-
+            "pass": server["pass"]
         }
         the_collector = ILOGUICollector(
             pod["environment"],
             server["id"],
             ilo_server_conf,
-            CONFIG["RECORDER_API_SERVER"]
+            config["RECORDER_API_SERVER"]
         )
 
     elif server["type"] == "idrac8-gui":
         idrac_server_conf = {
             "base_url": "https://{}".format(server["host"]),
             "user": server["user"],
-            "pass": server["pass"],
-            "sync_condition": poller_conf["sync_condition"]
-
+            "pass": server["pass"]
         }
         the_collector = IDRAC8GUICollector(
             pod["environment"],
             server["id"],
             idrac_server_conf,
-            CONFIG["RECORDER_API_SERVER"]
+            config["RECORDER_API_SERVER"]
         )
 
     elif server["type"] == "intel-gui":
         intel_server_conf = {
             "base_url": "https://{}".format(server["host"]),
             "user": server["user"],
-            "pass": server["pass"],
-            "sync_condition": poller_conf["sync_condition"]
-
+            "pass": server["pass"]
         }
         the_collector = INTELGUICollector(
             pod["environment"],
             server["id"],
             intel_server_conf,
-            CONFIG["RECORDER_API_SERVER"]
+            config["RECORDER_API_SERVER"]
         )
 
     elif server["type"] == "ibmc-gui":
         ibmc_server_conf = {
             "base_url": "https://{}".format(server["host"]),
             "user": server["user"],
-            "pass": server["pass"],
-            "sync_condition": poller_conf["sync_condition"]
-
+            "pass": server["pass"]
         }
         the_collector = IBMCGUICollector(
             pod["environment"],
             server["id"],
             ibmc_server_conf,
-            CONFIG["RECORDER_API_SERVER"]
+            config["RECORDER_API_SERVER"]
         )
 
     elif server["type"] == "redfish":
         server_conf = {
             "base_url": "https://{}".format(server["host"]),
             "user": server["user"],
-            "pass": server["pass"],
-            "sync_condition": poller_conf["sync_condition"]
+            "pass": server["pass"]
         }
         the_collector = RedfishCollector(
             pod["environment"],
             server["id"],
             server_conf,
-            CONFIG["RECORDER_API_SERVER"])
+            config["RECORDER_API_SERVER"])
     elif server["type"] == "ipmi":
         ipmi_server_conf = {
             "host": server["host"],
             "user": server["user"],
-            "pass": server["pass"],
-            "sync_condition": poller_conf["sync_condition"]
+            "pass": server["pass"]
         }
 
         the_collector = IPMICollector(
             pod["environment"],
             server["id"],
             ipmi_server_conf,
-            CONFIG["RECORDER_API_SERVER"]
+            config["RECORDER_API_SERVER"]
         )
     else:
         msg = "Unsupported power collect method: {}"
         msg += msg.format(server["type"])
         raise Exception(msg)
 
+    the_collector.name = server["type"] + "/" + server["id"]
     return the_collector
 
 
-# Activate signal handler for SIGTERM
-signal.signal(signal.SIGTERM, signal_term_handler)
+def start_pollers():
+    """Load conf, parse it, create pollers and collectors and start them."""
 
-# Create a list of active pollers
-POLLERS = []
+    # Load yaml conf file
+    with open("conf/collector-settings.yaml", 'r') as stream:
+        try:
+            config = yaml.load(stream)
+        except yaml.YAMLError:
+            logging.exception("Error while loading config")
+            sys.exit()
 
-# Configure logging
-logging.config.fileConfig("conf/collector-logging.conf")
-LOG = logging.getLogger(__name__)
+    # Parse confir to create poller and collectors
+    for a_pod in config["PODS"]:
+        logging.info(
+            "Loading configuration for pod %s",
+            a_pod["environment"]
+        )
 
-LOG.info("Server power consumption daemon is starting")
-with open("conf/collector-settings.yaml", 'r') as stream:
+        # Backward compatibility (defaut polling interval)
+        if "polling_interval" not in a_pod:
+            polling_interval = 10
+            logging.warn(
+                "\n\n*******************************\n\n"
+                "\"polling_interval\" is not set in PODS definition yaml file "
+                "(at environment level) using default setting: %ds "
+                "\n\n*******************************\n\n",
+                polling_interval
+            )
+        else:
+            polling_interval = a_pod["polling_interval"]
+
+        # Current poller config data structure
+        poller_conf = {
+            "polling_interval": polling_interval,
+            "collectors": [],
+            "active": True
+        }
+
+        if "active" in a_pod:
+            poller_conf["active"] = a_pod["active"]
+
+        if poller_conf["active"]:
+            # Create collectors for servers and add it to current poller
+            for srv in a_pod["servers"]:
+                if "active" not in srv or srv["active"]:
+                    collector = get_collector(
+                        srv,
+                        a_pod,
+                        config
+                    )
+                    poller_conf["collectors"].append(collector)
+                else:
+                    logging.info(
+                        "Server %s is not active: skipping",
+                        srv["id"]
+                    )
+
+            poller = Poller(poller_conf)
+            POLLERS.append(poller)
+
+            logging.info(
+                "Starting poller threads for pod %s",
+                a_pod["environment"]
+            )
+            poller.start()
+        else:
+            logging.info(
+                "Environment %s is not active: skipping",
+                a_pod["environment"]
+            )
+
+
+def main():
+    """Execute main code."""
+
+    # Activate signal handler for SIGTERM
+    signal.signal(signal.SIGTERM, signal_term_handler)
+
+    # Configure logging
+    logging.config.fileConfig("conf/collector-logging.conf")
+
+    logging.info("Server power consumption daemon is starting")
+
+    start_pollers()
     try:
-        CONFIG = yaml.load(stream)
-        # print(conf["PODS"])
-    except yaml.YAMLError as exc:
-        LOG.exception("Error while loading config")
-        sys.exit()
-
-for a_pod in CONFIG["PODS"]:
-    LOG.info(
-        "Loading configuration for pod %s",
-        a_pod["environment"]
-    )
-
-    if "polling_interval" not in a_pod:
-        polling_interval = 10
-        LOG.warn(
-            "\n\n*******************************\n\n"
-            "\"polling_interval\" is not set in PODS definition yaml file "
-            "(at environment level) using default setting: %ds "
-            "\n\n*******************************\n\n",
-            polling_interval
+        # Wait until killed
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        signal_term_handler()
+    except SystemExit:
+        pass
+    except Exception:  # pylint: disable=locally-disabled,broad-except
+        logging.error(
+            "Unexpected error: %s",
+            traceback.format_exc()
         )
-    else:
-        polling_interval = a_pod["polling_interval"]
+        signal_term_handler()
 
-    poller_conf = {
-        "polling_interval": polling_interval,
-        "sync_condition": threading.Condition(),
-        "collectors": [],
-        "active": True
-    }
 
-    if "active" in a_pod:
-        poller_conf["active"] = a_pod["active"]
-
-    if poller_conf["active"]:
-        for srv in a_pod["servers"]:
-            if "active" not in srv or srv["active"]:
-                collector = get_collector(srv, a_pod)
-                poller_conf["collectors"].append(collector)
-            else:
-                LOG.info(
-                    "Server %s is not active: skipping",
-                    srv["id"]
-                )
-
-        poller = Poller(poller_conf)
-        POLLERS.append(poller)
-
-        LOG.info(
-            "Starting poller threads for pod %s",
-            a_pod["environment"]
-        )
-        poller.start()
-    else:
-        LOG.info(
-            "Environment %s is not active: skipping",
-            a_pod["environment"]
-        )
-
-try:
-    while True:
-        time.sleep(1)
-except KeyboardInterrupt:
-    signal_term_handler()
-except SystemExit:
-    pass
-except Exception:  # pylint: disable=locally-disabled,broad-except
-    MSG = "Unexpected error: {}".format(traceback.format_exc())
-    LOG.error(MSG)
-    signal_term_handler()
+if __name__ == "__main__":
+    main()

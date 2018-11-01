@@ -44,7 +44,7 @@ class INTELGUICollector(Collector):
         cookies = {
             "SessionCookie": session
         }
-        self.log.debug("Getting power at %s", rqt_url)
+        self.log.debug("[%s]: Getting power at %s", self.name, rqt_url)
         response = requests.get(rqt_url,
                                 cookies=cookies,
                                 verify=False)
@@ -54,16 +54,18 @@ class INTELGUICollector(Collector):
             power = json_data[
                 "WEBVAR_STRUCTNAME_GETNMSTATISTICS"][0]["LSB_CURR"]
         else:
-            log_msg = "Can't get power from INTEL at "
-            log_msg += self.server_conf["base_url"]
-            self.log.error(log_msg)
-            self.log.debug(response.text)
-            raise Exception(log_msg)
+            self.log.error(
+                "[%s]: Can't get power from INTEL at %s",
+                self.name,
+                self.server_conf["base_url"]
+            )
+            self.log.debug("[%s]: %s", self.name, response.text)
+            raise Exception("Can't get power from INTEL")
         return power
 
     def clean_json(self, str_json, var_name):
         """Clean returned pseudo JSON by Intel Web Console."""
-        self.log.debug("Cleanning returned JSON")
+        self.log.debug("[%s]: Cleanning returned JSON", self.name)
         new_json = str_json.replace("'", '"')
         new_json = new_json.replace("//Dynamic Data Begin\n", "")
         new_json = new_json.replace(";", "")
@@ -83,7 +85,7 @@ class INTELGUICollector(Collector):
         payload = ("WEBVAR_USERNAME=" + self.server_conf["user"] +
                    "&WEBVAR_PASSWORD=" + self.server_conf["pass"])
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
-        self.log.debug("Login at %s", rqt_url)
+        self.log.debug("[%s]: Login at %s", self.name, rqt_url)
         response = requests.post(rqt_url,
                                  data=payload,
                                  auth=self.pod_auth,
@@ -97,14 +99,16 @@ class INTELGUICollector(Collector):
                 "WEBVAR_STRUCTNAME_WEB_SESSION"
             ][0]["SESSION_COOKIE"]
 
-            self.log.debug("SID=%s", str(session_id))
+            self.log.debug("[%s]: SID=%s", self.name, str(session_id))
             return session_id
         else:
-            log_msg = "Can't connect INTEL at "
-            log_msg += self.server_conf["base_url"]
-            self.log.error(log_msg)
-            self.log.debug(response.text)
-            raise Exception(log_msg)
+            self.log.error(
+                "[%s]: Can't connect INTEL at %s",
+                self.name,
+                self.server_conf["base_url"]
+            )
+            self.log.debug("[%s]: %s", self.name, response.text)
+            raise Exception("Can't connect INTEL")
 
     def logout(self, session_id):
         """Logout from INTEL."""
@@ -119,14 +123,14 @@ class INTELGUICollector(Collector):
                                     cookies=cookies,
                                     verify=False)
             if response.status_code != 200:
-                self.log.error("Logout error")
+                self.log.error("[%s]: Logout error", self.name)
         except requests.exceptions.ReadTimeout:
             pass
         except requests.exceptions.ConnectTimeout:
             pass
         except requests.exceptions.ConnectionError:
             pass
-        self.log.debug("Logged out")
+        self.log.debug("[%s]: Logged out", self.name)
 
     def get_power(self):
         """Get power from intel GUI."""
@@ -138,17 +142,16 @@ class INTELGUICollector(Collector):
             power = self.get_intel_power(session_id)
             self.logout(session_id)
 
-            self.log.debug("POWER=%s", str(power))
         except Exception:  # pylint: disable=broad-except
             if session_id is not None:
                 self.logout(session_id)
-            err_text = sys.exc_info()[0]
-            log_msg = "Error while trying to connect server {} ({}) \
-                        for power query: {}"
-            log_msg = log_msg.format(
-                self.server_id,
+
+            self.log.debug("[%s]: %s", self.name, traceback.format_exc())
+            self.log.error(
+                "[%s]: Error while trying to connect server (%s): %s",
+                self.name,
                 self.server_conf["base_url"],
-                err_text
+                sys.exc_info()[0]
             )
-            self.log.debug(traceback.format_exc())
-            self.log.error(err_text)
+
+        return power

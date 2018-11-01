@@ -85,7 +85,7 @@ class DataPoster(Thread):
 
             api_uri = self.data_server["base_url"] + "/resources/servers/"
             api_uri += urllib.quote_plus(self.data["sender"])
-            self.log.info(api_uri)
+            self.log.info("[%s]: %s", self.name, api_uri)
             response = requests.post(api_uri + "/consumption",
                                      data=json.dumps(payload),
                                      auth=auth,
@@ -93,9 +93,12 @@ class DataPoster(Thread):
                                          'content-type': 'application/json'
                                      })
 
-            self.log.debug('Message forwarded to data aggregator')
-            self.log.debug("data aggregator answer is:")
-            self.log.debug(response.text)
+            self.log.debug(
+                '[%s]: Message forwarded to data aggregator',
+                self.name
+            )
+            self.log.debug("[%s]: data aggregator answer is:", self.name)
+            self.log.debug("[%s]: %s", self.name, response.text)
         except Exception:  # pylint: disable=locally-disabled,broad-except
-            self.log.error("Error while sendind data to data aggregator")
+            self.log.error("[%s]: Error while sendind data to data aggregator", self.name)
             traceback.print_exc(file=sys.stdout)

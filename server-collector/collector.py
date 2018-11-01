@@ -60,8 +60,6 @@ class Collector(Thread):
                 "base_url": "Redfish API base URL. Ex.: https://localhost:443",
                 "user": Basic authentication user,
                 "pass": Basic authentication password,
-                "poller_name": Polling group name
-                "sync_condition": synchronization semaphore
             }
 
             :param data_server_conf: recorder API connection params
@@ -75,6 +73,7 @@ class Collector(Thread):
         """
         Thread.__init__(self)
         self.server_id = server_id
+        self.name = server_id
         self.server_conf = server_conf
         self.environment = environment
         if server_conf["user"] != "" and\
@@ -84,8 +83,8 @@ class Collector(Thread):
         else:
             self.pod_auth = None
         self.data_server_conf = data_server_conf
-        self.condition = server_conf["sync_condition"]
         self.running = False
+        self.ready = False
         self.log = logging.getLogger(__name__)
 
     def stop(self):
@@ -95,10 +94,12 @@ class Collector(Thread):
         Request to the current thread to stop by the end
         of current loop iteration
         """
-        log_msg = "Stop called for server"
-        log_msg = log_msg.format(self.server_id)
-        self.log.debug(log_msg)
+        self.log.debug(
+            "[%s]: Stop called for server",
+            self.name
+        )
         self.running = False
+        self.ready = False
 
     def get_power(self):
         """Get Power from box (to be implemented)."""
@@ -115,60 +116,74 @@ class Collector(Thread):
     def run(self):
         """Thread main code."""
 
-        self.running = True
         self.log.info(
-            "Starting thread collector for server %s",
-            self.server_id
+            "[%s]: Starting collector thread",
+            self.name
         )
 
+        self.running = True
         self.pre_run()
+        self.ready = True
         # Iterate for ever, or near....
         while self.running:
+
+            # Wait for next request
+            self.log.debug(
+                "[%s]: Collector ready for next read",
+                self.name
+            )
             self.condition.acquire()
             self.condition.wait()
             self.condition.release()
 
-            try:
-                power = self.get_power()
-                self.log.debug(
-                    "Got power form %s : %s",
-                    self.server_id,
-                    str(power)
-                )
-                if power is not None and power != 0:
-
-                    # Get measurement time in nano sec.
-                    data_time = int(time.time()) * 1000000000
-
-                    self.log.debug("POWER=%s", str(power))
-                    data = {
-                        "environment": self.environment,
-                        "sender": self.server_id,
-                        "power": power,
-                        "data_time": data_time
-                    }
-                    self.log.debug(data)
-                    data_poster = DataPoster(
-                        data,
-                        self.data_server_conf
+            # Running status may have changed while waitting
+            if self.running:
+                try:
+                    power = self.get_power()
+                    self.log.debug(
+                        "[%s]: POWER=%s",
+                        self.name,
+                        str(power)
                     )
-                    data_poster.start()
-                else:
-                    self.log.info(
-                        "Didn't got power from %s",
-                        self.server_id,
+                    if power is not None and power != 0:
+
+                        # Get measurement time in nano sec.
+                        data_time = int(time.time()) * 1000000000
+
+                        data = {
+                            "environment": self.environment,
+                            "sender": self.server_id,
+                            "power": power,
+                            "data_time": data_time
+                        }
+                        self.log.debug(
+                            "[%s]: %s",
+                            self.name,
+                            data
+                        )
+                        data_poster = DataPoster(
+                            data,
+                            self.data_server_conf
+                        )
+                        data_poster.name = self.name
+                        data_poster.start()
+                    else:
+                        self.log.info(
+                            "[%s]: Didn't got power from server",
+                            self.name,
+                        )
+                except Exception:  # pylint: disable=broad-except
+                    # No: default case
+                    self.log.error(
+                        "[%s]: Error while trying to connect server "
+                        "for power query: %s",
+                        self.name,
+                        sys.exc_info()[0]
                     )
-            except Exception:  # pylint: disable=broad-except
-                # No: default case
-                self.log.error(
-                    "Error while trying to connect server %s for power query: %s",
-                    self.server_id,
-                    sys.exc_info()[0]
-                )
-                self.log.debug(traceback.format_exc())
+                    self.log.debug(traceback.format_exc())
 
         self.post_run()
         self.log.debug(
-            "Thread for server %s is teminated",
-            self.server_id
+            "[%s]: Thread for server is teminated",
+            self.name
         )

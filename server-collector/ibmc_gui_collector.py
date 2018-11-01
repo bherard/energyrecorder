@@ -66,7 +66,7 @@ class IBMCGUICollector(Collector):
             "list%22%3A%5B%22BaseValue%22%2C%22TopValue%" +
             "22%2C%22Enable%22%2C%22LimitValue%22%2C%22F" +
             "ailAction%22%2C%22ManualSetEnable%22%5D%7D%5D")
-        self.log.debug("Getting power at %s", rqt_url)
+        self.log.debug("[%s]: Getting power at %s", self.name, rqt_url)
         response = requests.post(rqt_url,
                                  cookies=cookies,
                                  headers=headers,
@@ -74,20 +74,22 @@ class IBMCGUICollector(Collector):
                                  verify=False)
         if response.status_code == 200:
             json_str = self.clean_json(response.text)
-            self.log.debug(json_str)
+            self.log.debug("[%s]: %s", self.name, json_str)
             json_data = json.loads(json_str)
             power = json_data["SysPower"][0]["Power"]
         else:
-            log_msg = "Can't get power from Huawei iBmc at "
-            log_msg += self.server_conf["base_url"]
-            self.log.error(log_msg)
-            self.log.debug(response.text)
-            raise Exception(log_msg)
+            self.log.error(
+                "[%s]: Can't get power from Huawei iBmc at %s",
+                self.name,
+                self.server_conf["base_url"]
+            )
+            self.log.debug("[%s]: %s", self.name, response.text)
+            raise Exception("Can't get power from Huawei iBmc")
         return power
 
     def clean_json(self, str_json):
         """Clean returned pseudo JSON by Intel Web Console."""
-        self.log.debug("Cleanning returned JSON")
+        self.log.debug("[%s]: Cleanning returned JSON", self.name)
         new_json = str_json.replace("%22", '"')
         if new_json[0:1] != "{":
             result = "%s" % (new_json[1:])
@@ -104,18 +106,21 @@ class IBMCGUICollector(Collector):
             "SessionId3": session_id
         }
         headers = {"User-Agent": self._USER_AGENT}
-        self.log.debug("Getting token at %s", rqt_url)
+        self.log.debug("[%s]: Getting token at %s", rqt_url, self.name)
         response = requests.post(rqt_url,
                                  cookies=cookies,
                                  headers=headers,
                                  verify=False)
         if response.status_code == 200:
-            self.log.debug("Token=%s", response.text)
+            self.log.debug("[%s]: Token=%s", self.name, response.text)
             return response.text
         else:
-            self.log.error("Get token status: %d (%s)",
-                           response.status_code,
-                           response.text)
+            self.log.error(
+                "[%s]: Get token status: %d (%s)",
+                self.name,
+                response.status_code,
+                response.text
+            )
             raise Exception("Unable to get token")
 
     def login(self):
@@ -130,7 +135,7 @@ class IBMCGUICollector(Collector):
                    "&func=AddSession" +
                    "&IsKvmApp=0")
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
-        self.log.debug("Login at %s", rqt_url)
+        self.log.debug("[%s]: Login at %s", self.name, rqt_url)
         response = requests.post(rqt_url,
                                  data=payload,
                                  headers=headers,
@@ -139,24 +144,24 @@ class IBMCGUICollector(Collector):
             for cookie in response.cookies:
                 if "SessionId" in cookie.name:
                     session_id = cookie.value
-                    self.log.debug("Session ID=%s", session_id)
+                    self.log.debug(
+                        "[%s]: Session ID=%s",
+                        self.name,
+                        session_id
+                    )
                     token = self._get_token(session_id)
                     break
             assert session_id
             assert token
-            # session_id = json_data[
-            #     "WEBVAR_STRUCTNAME_WEB_SESSION"
-            # ][0]["SESSION_COOKIE"]
-
-            # self.log.debug("SID=" + session_id)
-            # return session_id
             return {"cookie": session_id, "token": token}
         else:
-            log_msg = "Can't connect Huawei iBmc at "
-            log_msg += self.server_conf["base_url"]
-            self.log.error(log_msg)
-            self.log.debug(response.text)
-            raise Exception(log_msg)
+            self.log.error(
+                "[%s]: Can't connect Huawei iBmc at %s",
+                self.name,
+                self.server_conf["base_url"]
+            )
+            self.log.debug("[%s]: %s", self.name, response.text)
+            raise Exception("Can't connect Huawei iBmc")
 
     def logout(self, session_id):
         """Logout from Huawei iBmc."""
@@ -177,14 +182,14 @@ class IBMCGUICollector(Collector):
                                      data=payload,
                                      verify=False)
             if response.status_code != 200:
-                self.log.error("Logout error")
+                self.log.error("[%s]: Logout error", self.name)
         except requests.exceptions.ReadTimeout:
             pass
         except requests.exceptions.ConnectTimeout:
             pass
         except requests.exceptions.ConnectionError:
             pass
-        self.log.debug("Logged out")
+        self.log.debug("[%s]: Logged out", self.name)
 
     def get_power(self):
         """Get power form iBMC GUI."""
@@ -196,20 +201,16 @@ class IBMCGUICollector(Collector):
             power = self.get_ibmc_power(session_id)
             self.logout(session_id)
 
-            self.log.debug("POWER=%s", str(power))
-
         except Exception:  # pylint: disable=broad-except
             if session_id is not None:
                 self.logout(session_id)
-            err_text = sys.exc_info()[0]
-            log_msg = "Error while trying to connect server {} ({}) \
-                        for power query: {}"
-            log_msg = log_msg.format(
-                self.server_id,
+
+            self.log.debug("[%s]: %s", self.name, traceback.format_exc())
+            self.log.error(
+                "[%s]: Error while trying to connect server (%s): %s",
+                self.name,
                 self.server_conf["base_url"],
-                err_text
+                sys.exc_info()[0]
             )
-            self.log.debug(traceback.format_exc())
-            self.log.error(err_text)
 
         return power

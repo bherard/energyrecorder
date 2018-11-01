@@ -101,11 +101,13 @@ class IDRAC8GUICollector(Collector):
             power = int(e_list[len(e_list)-1].text.split(",")[0])
 
         else:
-            log_msg = "Can't get power from IDRAC at "
-            log_msg += self.server_conf["base_url"]
-            self.log.error(log_msg)
-            self.log.debug(response.text)
-            raise Exception(log_msg)
+            self.log.error(
+                "[%s]: Can't get power from IDRAC at %s",
+                self.name,
+                self.server_conf["base_url"]
+            )
+            self.log.debug("[%s]: %s", self.name, response.text)
+            raise Exception("Can't get power from IDRAC")
         return power
 
     def login(self):
@@ -126,14 +128,16 @@ class IDRAC8GUICollector(Collector):
             root = ET.fromstring(response.text)
             url = root.find("forwardUrl").text
             url_parts = url.split("ST2=")
-            self.log.debug("SID=%s", session_id)
+            self.log.debug("[%s]: SID=%s", self.name, session_id)
             return {"session_id": session_id, "ST2": url_parts[1]}
         else:
-            log_msg = "Can't connect IDRAC at "
-            log_msg += self.server_conf["base_url"]
-            self.log.error(log_msg)
-            self.log.debug(response.text)
-            raise Exception(log_msg)
+            self.log.error(
+                "[%s]: Can't connect IDRAC at %s",
+                self.name,
+                self.server_conf["base_url"]
+            )
+            self.log.debug("[%s]: %s", self.name, response.text)
+            raise Exception("Can't connect IDRAC")
 
     def logout(self, session_id):
         """Logout from IDRAC."""
@@ -154,7 +158,7 @@ class IDRAC8GUICollector(Collector):
             pass
         except requests.exceptions.ConnectionError:
             pass
-        self.log.debug("Logged out")
+        self.log.debug("[%s]: Logged out", self.name)
 
     def get_power(self):
         """Get power from idrac GUI."""
@@ -166,19 +170,16 @@ class IDRAC8GUICollector(Collector):
             power = self.get_idrac_power(session)
             self.logout(session["session_id"])
 
-            self.log.debug("POWER=%s", str(power))
         except Exception:  # pylint: disable=broad-except
             if session is not None:
                 self.logout(session["session_id"])
-            err_text = sys.exc_info()[0]
-            log_msg = "Error while trying to connect server {} ({}) \
-                        for power query: {}"
-            log_msg = log_msg.format(
-                self.server_id,
+
+            self.log.debug("[%s]: %s", self.name, traceback.format_exc())
+            self.log.error(
+                "[%s]: Error while trying to connect server (%s): %s",
+                self.name,
                 self.server_conf["base_url"],
-                err_text
+                sys.exc_info()[0]
             )
-            self.log.debug(traceback.format_exc())
-            self.log.error(err_text)
 
         return power

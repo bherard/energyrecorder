@@ -53,12 +53,13 @@ class ILOCollector(Collector):
                                         verify=False)
                 chassis_list = json.loads(response.text)
             except Exception:  # pylint: disable=locally-disabled,broad-except
-                log_msg = "Error while trying to connect server {} ({}): {}"
-                log_msg = log_msg.format(self.server_id,
-                                         self.server_conf["base_url"],
-                                         sys.exc_info()[0])
-                self.log.error(log_msg)
-                self.log.debug(traceback.format_exc())
+                self.log.error(
+                    "[%s]: Error while trying to connect server (%s): %s",
+                    self.name,
+                    self.server_conf["base_url"],
+                    sys.exc_info()[0]
+                )
+                self.log.debug("[%s]: %s", self.name, traceback.format_exc())
                 time.sleep(5)
         return chassis_list
 
@@ -90,7 +91,7 @@ class ILOCollector(Collector):
                     "/PowerMetrics/FastPowerMeter", chassis)
 
                 if "PowerDetail" not in power_metter:
-                    self.log.debug("ILO2.4")
+                    self.log.debug("[%s]: ILO2.4", self.name)
                     # ILO 2.4 aka ServiceVersion 1.0.0: redfish API
                     power_metter = self.get_power_metter(
                         "/Power/FastPowerMeter", chassis)
@@ -99,7 +100,7 @@ class ILOCollector(Collector):
 
                 else:
                     # ILO 2.1 aka ServiceVersion 0.9.5: redfish API
-                    self.log.debug("ILO2.1")
+                    self.log.debug("[%s]: ILO2.1", self.name)
                     power += power_metter['PowerDetail'][0]['Average']
             except Exception:  # pylint: disable=broad-except
                 # Was it and error from ILO?
@@ -109,14 +110,11 @@ class ILOCollector(Collector):
                 else:
                     # No: default case
                     err_text = sys.exc_info()[0]
-                    log_msg = "Error while trying to connect server {} ({}) \
-                                for power query: {}"
-                    log_msg = log_msg.format(
-                        self.server_id,
-                        self.server_conf["base_url"],
-                        err_text
+                    self.log.debug(
+                        "[%s]: %s",
+                        self.name,
+                        traceback.format_exc()
                     )
-                    self.log.debug(traceback.format_exc())
-                self.log.error(err_text)
+                self.log.error("[%s]: %s", self.name, err_text)
                 return None
         return power
