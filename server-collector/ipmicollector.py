@@ -34,6 +34,8 @@ from collector import Collector
 class IPMICollector(Collector):
     """Collect power consumption via IPMI protocol."""
 
+    type = "ipmi"
+
     #
     # Dictionnary for known Manufacturer
     # and associated "sensor" keyword for Power.
@@ -60,38 +62,31 @@ class IPMICollector(Collector):
             self.name,
             self.server_conf["host"]
         )
-        try:
-            server_def = self.server_conf["host"].split(":")
-            server_addr = server_def[0]
-            sys_cmd = (
-                "ipmitool -I lanplus -H " +
-                server_addr +
-                " -U '" + self.pod_auth[0] + "'" +
-                " -P '" + self.pod_auth[1] + "'" +
-                " bmc info"
-            )
-            ipmi_data = subprocess.check_output(
-                sys_cmd,
+        server_def = self.server_conf["host"].split(":")
+        server_addr = server_def[0]
+        sys_cmd = (
+            "ipmitool -I lanplus -H " +
+            server_addr +
+            " -U '" + self.pod_auth[0] + "'" +
+            " -P '" + self.pod_auth[1] + "'" +
+            " bmc info"
+        )
+        ipmi_data = subprocess.check_output(
+            sys_cmd,
+            shell=True,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True)
+        if "Manufacturer ID" in ipmi_data:
+            m_id = subprocess.check_output(
+                'echo "' + ipmi_data + '"' +
+                "| grep 'Manufacturer ID'|" +
+                "awk -F ':' '{print $2}'",
                 shell=True,
                 stderr=subprocess.STDOUT,
-                universal_newlines=True)
-            if "Manufacturer ID" in ipmi_data:
-                m_id = subprocess.check_output('echo "' + ipmi_data + '"' +
-                                               "| grep 'Manufacturer ID'|" +
-                                               "awk -F ':' '{print $2}'",
-                                               shell=True,
-                                               stderr=subprocess.STDOUT,
-                                               universal_newlines=True)
-                m_id = m_id.strip(' \t\n\r')
-                return m_id
-        except subprocess.CalledProcessError as exc:
-            self.log.error(
-                "[%s]: IPMI Error: rc=%d err=%s",
-                self.name,
-                exc.returncode,
-                exc.output
+                universal_newlines=True
             )
-            return "none"
+            m_id = m_id.strip(' \t\n\r')
+            return m_id
 
     def get_sensors(self, manufacturer):
         """Return Power sensors list."""

@@ -38,6 +38,7 @@ class IBMCGUICollector(Collector):
     """Collect power consumption via DELL Huawei iBmc GUI/API."""
 
     _USER_AGENT = "Mozilla Chrome"
+    type = "ibmc-gui"
 
     def get_ibmc_power(self, session):
         """Get Power value form Huawei iBmc."""

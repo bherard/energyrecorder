@@ -73,7 +73,7 @@ class Collector(Thread):
         """
         Thread.__init__(self)
         self.server_id = server_id
-        self.name = server_id
+        self.name = "{}/{}".format(self.type, server_id)
         self.server_conf = server_conf
         self.environment = environment
         if server_conf["user"] != "" and\
@@ -122,8 +122,16 @@ class Collector(Thread):
         )
 
         self.running = True
-        self.pre_run()
-        self.ready = True
+        try:
+            self.pre_run()
+            self.ready = True
+        except Exception:  # pylint: disable=locally-disabled,broad-except
+            self.log.exception(
+                "[%s]: Error while executing pre_run. "
+                "\n\n\tSTOPING THREAD !!\n\n",
+                self.name
+            )
+            self.running = False
         # Iterate for ever, or near....
         while self.running:
 
@@ -139,6 +147,10 @@ class Collector(Thread):
             # Running status may have changed while waitting
             if self.running:
                 try:
+                    self.log.debug(
+                        "[%s]: requesting power",
+                        self.name
+                    )
                     power = self.get_power()
                     self.log.debug(
                         "[%s]: POWER=%s",

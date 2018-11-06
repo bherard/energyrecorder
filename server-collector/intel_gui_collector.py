@@ -36,6 +36,8 @@ requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
 class INTELGUICollector(Collector):
     """Collect power consumption via DELL INTEL GUI/API."""
 
+    type = "intel-gui"
+
     def get_intel_power(self, session):
         """Get Power value form INTEL."""
         power = None

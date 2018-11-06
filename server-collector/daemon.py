@@ -26,22 +26,22 @@
 # 1.1.0 - 2018-10-26 : Add feature to synchronize polling of different threads
 ##
 import logging.config
-import traceback
-import time
 import signal
 import sys
 import threading
+import time
+import traceback
 from threading import Thread
+
 import yaml
 
-from ilocollector import ILOCollector
-from ilo_gui_collector import ILOGUICollector
-from idrac8_gui_collector import IDRAC8GUICollector
-from intel_gui_collector import INTELGUICollector
 from ibmc_gui_collector import IBMCGUICollector
+from idrac8_gui_collector import IDRAC8GUICollector
+from ilo_gui_collector import ILOGUICollector
+from ilocollector import ILOCollector
+from intel_gui_collector import INTELGUICollector
 from ipmicollector import IPMICollector
 from redfishcollector import RedfishCollector
-
 
 # Create a list of active pollers
 POLLERS = []
@@ -57,10 +57,11 @@ class Poller(Thread):
         self.conf = conf
         self.running = False
         self.condition = threading.Condition()
+        self.name = "poller/{}".format(conf["environment"])
         if self.conf["polling_interval"] <= 0:
             self.conf["polling_interval"] = 0.1
 
-    def notity_collectors(self):
+    def _notity_collectors(self):
         """Notify collectors to execute power reading."""
         self.condition.acquire()
         self.condition.notify_all()
@@ -83,6 +84,10 @@ class Poller(Thread):
 
     def run(self):
         self.running = True
+        self.logger.debug(
+            "[%s]: Poller thread is starting!",
+            self.name
+        )
 
         # Start all collect threads
         for _collector in self.conf["collectors"]:
@@ -90,38 +95,46 @@ class Poller(Thread):
             _collector.start()
 
         # Ensure colelctors are ready (i.e all pre_run executed)
-        for _collector in self.conf["collectors"]:
-            while not _collector.ready:
-                time.sleep(0.1)
+        # for _collector in self.conf["collectors"]:
+        #     while not _collector.ready:
+        #         time.sleep(0.1)
+        # self.logger.debug(
+        #     "[%s]: Server threads are ready, let's go!",
+        #     self.name
+        # )
 
         # Loop until stop was resquested
+        self.logger.debug(
+            "[%s]: Server threads are started, entering polling loop!",
+            self.name
+        )
         while self.running:
             # Notfy Collector threads to get power
-            self.notity_collectors()
+            self._notity_collectors()
 
             # Wait for polling interval
             self._interruptible_sleep(self.conf["polling_interval"])
 
-        self.logger.debug("Stoping collectors for poller")
+        self.logger.debug("[%s] Stoping collectors for poller", self.name)
         # Request stop for all collector threads
         for _collector in self.conf["collectors"]:
             _collector.stop()
 
         # Notify colelctors eventualy stuck on condition
-        self.notity_collectors()
+        self._notity_collectors()
 
         # Wait for collectors to stop
-        self.logger.debug("Waiting for collectors to stop")
+        self.logger.debug("[%s] Waiting for collectors to stop", self.name)
         for _collector in self.conf["collectors"]:
             _collector.join()
-        self.logger.debug("Poller stoped")
+        self.logger.debug("[%s]: Poller stoped", self.name)
 
 
-def signal_term_handler():
+# pylint: disable=locally-disabled, unused-argument
+def signal_term_handler(signal_received=signal.SIGTERM, frame=None):
     """Sigterm signal handler."""
     for running_thread in POLLERS:
-        msg = "Stopping thread for poller"
-        logging.info(msg)
+        logging.info("Stopping threads for poller %s", running_thread.name)
         running_thread.stop()
     logging.info("Waiting for pollers to stop....")
     for running_thread in POLLERS:
@@ -129,10 +142,25 @@ def signal_term_handler():
     logging.info("Program terminated")
 
 
+# pylint: disable=locally-disabled, unused-argument
+def signal_usr1_handler(signal_received, frame):
+    """USR1 signal handler."""
+    logging.info("Running config is:")
+    for poller in POLLERS:
+        logging.info("\t[%s]", poller.name)
+        for collector in poller.conf["collectors"]:
+            logging.info(
+                "\t\t[%s] ready=%s running=%s",
+                collector.name,
+                collector.ready,
+                collector.running
+            )
+
+
 def get_collector(server, pod, config):
     """Get proper collector instance."""
 
-    if server["type"] == "ilo":
+    if server["type"] == ILOCollector.type:
         ilo_server_conf = {
             "base_url": "https://{}".format(server["host"]),
             "user": server["user"],
@@ -144,7 +172,7 @@ def get_collector(server, pod, config):
             ilo_server_conf,
             config["RECORDER_API_SERVER"]
         )
-    elif server["type"] == "ilo-gui":
+    elif server["type"] == ILOGUICollector.type:
         ilo_server_conf = {
             "base_url": "https://{}".format(server["host"]),
             "user": server["user"],
@@ -157,7 +185,7 @@ def get_collector(server, pod, config):
             config["RECORDER_API_SERVER"]
         )
 
-    elif server["type"] == "idrac8-gui":
+    elif server["type"] == IDRAC8GUICollector.type:
         idrac_server_conf = {
             "base_url": "https://{}".format(server["host"]),
             "user": server["user"],
@@ -170,7 +198,7 @@ def get_collector(server, pod, config):
             config["RECORDER_API_SERVER"]
         )
 
-    elif server["type"] == "intel-gui":
+    elif server["type"] == INTELGUICollector.type:
         intel_server_conf = {
             "base_url": "https://{}".format(server["host"]),
             "user": server["user"],
@@ -183,7 +211,7 @@ def get_collector(server, pod, config):
             config["RECORDER_API_SERVER"]
         )
 
-    elif server["type"] == "ibmc-gui":
+    elif server["type"] == IBMCGUICollector.type:
         ibmc_server_conf = {
             "base_url": "https://{}".format(server["host"]),
             "user": server["user"],
@@ -196,7 +224,7 @@ def get_collector(server, pod, config):
             config["RECORDER_API_SERVER"]
         )
 
-    elif server["type"] == "redfish":
+    elif server["type"] == RedfishCollector.type:
         server_conf = {
             "base_url": "https://{}".format(server["host"]),
             "user": server["user"],
@@ -207,7 +235,7 @@ def get_collector(server, pod, config):
             server["id"],
             server_conf,
             config["RECORDER_API_SERVER"])
-    elif server["type"] == "ipmi":
+    elif server["type"] == IPMICollector.type:
         ipmi_server_conf = {
             "host": server["host"],
             "user": server["user"],
@@ -225,7 +253,6 @@ def get_collector(server, pod, config):
         msg += msg.format(server["type"])
         raise Exception(msg)
 
-    the_collector.name = server["type"] + "/" + server["id"]
     return the_collector
 
 
@@ -264,7 +291,8 @@ def start_pollers():
         poller_conf = {
             "polling_interval": polling_interval,
             "collectors": [],
-            "active": True
+            "active": True,
+            "environment": a_pod["environment"]
         }
 
         if "active" in a_pod:
@@ -306,6 +334,7 @@ def main():
 
     # Activate signal handler for SIGTERM
     signal.signal(signal.SIGTERM, signal_term_handler)
+    signal.signal(signal.SIGUSR1, signal_usr1_handler)
 
     # Configure logging
     logging.config.fileConfig("conf/collector-logging.conf")

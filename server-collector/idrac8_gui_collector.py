@@ -78,6 +78,8 @@ class AsyncGet(Thread):
 class IDRAC8GUICollector(Collector):
     """Collect power consumption via DELL IDRAC8 GUI/API."""
 
+    type = "idrac8-gui"
+
     def get_idrac_power(self, session):
         """Get Power value form IDRAC."""
         power = None

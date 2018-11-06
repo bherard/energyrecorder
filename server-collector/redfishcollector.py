@@ -42,6 +42,7 @@ class RedfishCollector(Collector):
     """Collect power consumption via HP Redfish rest/redfish API."""
 
     _chassis_list = None
+    type = "redfish"
 
     def _is_https(self,):
         """Try to determine if host is using https or not."""

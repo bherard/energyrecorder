@@ -38,6 +38,7 @@ class ILOCollector(Collector):
     """Collect power consumption via HP ILO rest/redfish API."""
 
     _chassis_list = None
+    type = "ilo"
 
     def load_chassis_list(self):
         """Get Chassis List for server ILO API."""

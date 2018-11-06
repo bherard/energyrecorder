@@ -35,6 +35,8 @@ requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
 class ILOGUICollector(Collector):
     """Collect power consumption via HP ILO rest/redfish API."""
 
+    type = "ilo-gui"
+
     def get_power_metter(self, session_id):
         """Get PowerMetter values form ILO API."""
         rqt_url = self.server_conf["base_url"]
