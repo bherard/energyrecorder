@@ -77,8 +77,6 @@ class Recorder(Resource):
                           WHERE environment='" + env + "' \
                           AND time <=" + str(time)
 
-        self.logger.debug(str_select)
-
         if settings.INFLUX["user"] is not None:
             auth = (settings.INFLUX["user"], settings.INFLUX["pass"])
         else:
@@ -221,6 +219,11 @@ class Recorder(Resource):
             :param env: Environement identifier
             :type env: string
         """
+        self.logger.info(
+            "GET env=%s",
+            env
+        )
+
         args = PARSER.parse_args(request)
         time = args.get('time', None)
 
@@ -237,6 +240,10 @@ class Recorder(Resource):
             :param env: Environement identifier
             :type env: string
         """
+        self.logger.info(
+            "DELETE env=%s",
+            env
+        )
         result = self.load_session(env)
 
         self.store_session(env, result.scenario, result.step, 0)
@@ -254,12 +261,21 @@ class Recorder(Resource):
             :type env: string
         """
         data = request.json
+        self.logger.info(
+            "POST env=%s scenario=%s step=%s",
+            env,
+            data.get("scenario"),
+            data.get("step")
+        )
+
         return self.store_session(env, data.get("scenario"), data.get("step"))
 
 
 @NS.route('/environment/<string:env>/step')
 class RecorderStep(Resource):
     """Recorder steps services management class."""
+
+    logger = logging.getLogger(__name__)
 
     @api.marshal_with(RUNNING_SCENARIO)
     @api.expect(STEP_POST)
@@ -272,9 +288,16 @@ class RecorderStep(Resource):
             :type env: string
         """
         recorder = Recorder()
+        data = request.json
+
+        self.logger.info(
+            "POST step env=%s step=%s",
+            env,
+            data.get("step")
+        )
+
         result = recorder.load_session(env)
 
-        data = request.json
         result.step = data.get("step")
         recorder.store_session(env, result.scenario, result.step)
 

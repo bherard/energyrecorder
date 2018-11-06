@@ -47,7 +47,6 @@ class Ping(Resource):
 
     def connect_influx(self):
         """Try to connect influxDB."""
-        self.logger.debug("ping called")
 
         result = NRGAPIStatusClass("OK")
         if settings.INFLUX["user"] is not None:
@@ -72,4 +71,6 @@ class Ping(Resource):
     @api.marshal_with(API_STATUS)
     def get(self):
         """Return API status."""
+        self.logger.debug("GET ping")
+
         return self.connect_influx()

@@ -13,7 +13,7 @@ handlers=console,file_rotating
 
 [logger_api]
 level=DEBUG
-handlers=console
+handlers=console,file_rotating
 qualname=api
 propagate=0
 
