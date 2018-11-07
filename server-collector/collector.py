@@ -151,6 +151,8 @@ class Collector(Thread):
                         "[%s]: requesting power",
                         self.name
                     )
+                    # Get measurement time in nano sec.
+                    data_time = int(time.time()) * 1000000000
                     power = self.get_power()
                     self.log.debug(
                         "[%s]: POWER=%s",
@@ -158,9 +160,6 @@ class Collector(Thread):
                         str(power)
                     )
                     if power is not None and power != 0:
-
-                        # Get measurement time in nano sec.
-                        data_time = int(time.time()) * 1000000000
 
                         data = {
                             "environment": self.environment,
