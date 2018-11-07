@@ -147,6 +147,12 @@ class Collector(Thread):
             # Running status may have changed while waitting
             if self.running:
                 try:
+                    # Get measurement time in nano sec.
+                    data_time = int(time.time()) * 1000000000
+                    self.log.debug("[%s]: collect time is %d",
+                        self.name,
+                        data_time)
+
                     self.log.debug(
                         "[%s]: requesting power",
                         self.name
@@ -158,10 +164,6 @@ class Collector(Thread):
                         str(power)
                     )
                     if power is not None and power != 0:
-
-                        # Get measurement time in nano sec.
-                        data_time = int(time.time()) * 1000000000
-
                         data = {
                             "environment": self.environment,
                             "sender": self.server_id,
