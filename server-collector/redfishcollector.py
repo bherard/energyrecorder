@@ -66,6 +66,34 @@ class RedfishCollector(Collector):
             requests.get(url)
             return False
 
+    def get_chassis_def(self, chassis_url):
+        """Get chassis def from RedFish."""
+        
+        request_url = self.server_conf["base_url"] + chassis_url
+
+        self.log.debug(
+            "[%s]: Chassis def at %s ",
+            self.name,
+            request_url
+        )
+
+        response = requests.get(request_url,
+                                auth=self.pod_auth,
+                                verify=False)
+        if response.status_code != 200:
+            self.log.error(
+                "[%s]: Error while calling %s\nHTTP "
+                "STATUS=%d\nHTTP BODY=%s",
+                self.name,
+                request_url,
+                response.status_code,
+                response.text
+            )
+            self.running = False
+            return None
+        else:
+            return json.loads(response.text)
+
     def load_chassis_list(self):
         """Get Chassis List for server Redfish API."""
         chassis_list = None
@@ -75,13 +103,14 @@ class RedfishCollector(Collector):
             try:
                 request_url = self.server_conf["base_url"]
                 request_url += "/redfish/v1/Chassis/"
+                self.log.debug(
+                    "[%s]: Chassis list at %s ",
+                    self.name,
+                    request_url
+                )
                 response = requests.get(request_url,
                                         auth=self.pod_auth,
                                         verify=False)
-                self.log.debug(
-                    "Chassis list at %s ",
-                    request_url
-                )
                 if response.status_code != 200:
                     self.log.error(
                         "[%s]: Error while calling %s\nHTTP "
@@ -94,6 +123,21 @@ class RedfishCollector(Collector):
                     self.running = False
                 else:
                     chassis_list = json.loads(response.text)
+                    for chassis in chassis_list["Members"]:
+                        chassis_def = self.get_chassis_def(
+                            chassis["@odata.id"]
+                        )
+                        if "Power" in chassis_def:
+                            chassis["HavePower"] = True
+                        else:
+                            chassis["HavePower"] = False
+                        self.log.debug(
+                            "[%s]: chassis %s has power data: %s",
+                            self.name,
+                            chassis["@odata.id"],
+                            chassis["HavePower"]
+                        )
+
             except Exception:  # pylint: disable=locally-disabled,broad-except
                 self.log.error(
                     "[%s]: Error while trying to connect server (%s): %s)",
@@ -144,7 +188,8 @@ class RedfishCollector(Collector):
         for chassis in self._chassis_list['Members']:
 
             try:
-                power += self.get_chassis_power(chassis["@odata.id"])
+                if chassis["HavePower"]:
+                    power += self.get_chassis_power(chassis["@odata.id"])
 
             except Exception:  # pylint: disable=broad-except
                 # No: default case

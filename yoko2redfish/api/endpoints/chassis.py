@@ -86,13 +86,28 @@ class ChassisList(Resource):
         self.logger.debug(rc)
         return rc
 
+
+@NS.route('/<string:chassis>')
+@NS.route('/<string:chassis>/')
+class ChassisDef(Resource):
+    """Chassis def class."""
+    def get(self, chassis):  # pylint: disable=locally-disabled,no-self-use
+        """Return pseud chassis def."""
+        ret = {
+            "Power": {
+                 "@odata.id": "/redfish/v1/Chassis/" + chassis + "/Power/"
+            }
+        }
+        return ret
+
+
+@NS.route('/1/Power')
 @NS.route('/1/Power/')
 class ChassisPower(Resource):
-    """Chassis class."""
+    """Chassis Power class."""
 
     logger = logging.getLogger(__name__)
 
-    
     def get(self):
         """Return chassis power."""
 
