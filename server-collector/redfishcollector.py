@@ -68,7 +68,7 @@ class RedfishCollector(Collector):
 
     def get_chassis_def(self, chassis_url):
         """Get chassis def from RedFish."""
-        
+
         request_url = self.server_conf["base_url"] + chassis_url
 
         self.log.debug(

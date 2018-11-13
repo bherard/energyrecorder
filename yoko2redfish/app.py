@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # -*- coding: UTF-8 -*-
 # --------------------------------------------------------
 # Module Name : power recording API 
