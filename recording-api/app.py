@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 """Recorder API app main code."""
 # --------------------------------------------------------
 # Module Name : terraHouat power recording API
@@ -25,15 +25,16 @@
 #
 import logging.config
 import sys
+
 import flask_restplus.apidoc
 import requests
 import yaml
+from flask import Blueprint, Flask
 
-from flask import Flask, Blueprint
 import settings
-from api.endpoints.servers import NS as servers_namespace
-from api.endpoints.recorder import NS as recorder_namespace
 from api.endpoints.monitoring import NS as monitoring_namespace
+from api.endpoints.recorder import NS as recorder_namespace
+from api.endpoints.servers import NS as servers_namespace
 from api.restplus import API as api
 
 APP = Flask(__name__)
@@ -91,7 +92,7 @@ def initialize_app(flask_app):
     api_doc = flask_restplus.apidoc.apidoc
     api_doc.url_prefix = settings.API["context_root"] + "/doc"
     flask_app.register_blueprint(blueprint)
-    requests.packages.urllib3.disable_warnings()
+    requests.urllib3.disable_warnings()
 
 
 @APP.after_request

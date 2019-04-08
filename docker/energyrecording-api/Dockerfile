@@ -3,10 +3,10 @@ LABEL maintainer="benoit.herard@orange.com"
 
 EXPOSE 80/tcp
 
-RUN apk --update add git python py-pip bash ca-certificates curl uwsgi-python nginx;\
+RUN apk --update add git python3 py3-pip bash ca-certificates curl uwsgi-python nginx;\
     update-ca-certificates ; \
     apk add openssl;\
-    pip install --upgrade pip; \
+    pip3 install --upgrade pip; \
     cd /usr/local;\
     git clone https://github.com/bherard/energyrecorder;\
     cd energyrecorder;\

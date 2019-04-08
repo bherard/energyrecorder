@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 """Recorder API Management."""
 # --------------------------------------------------------
 # Module Name : power recording API
@@ -57,8 +57,8 @@ class Ping(Resource):
         query = 'SHOW RETENTION POLICIES ON "{}"'
         query = query.format(settings.INFLUX["db"])
         influx_url = settings.INFLUX["host"] + "/query?q="
-        influx_url += urllib.quote_plus(query)
-        influx_url += "&db=" + urllib.quote_plus(settings.INFLUX["db"])
+        influx_url += urllib.parse.quote(query)
+        influx_url += "&db=" + urllib.parse.quote(settings.INFLUX["db"])
         response = requests.get(influx_url, auth=auth, timeout=1, verify=False)
         if response.status_code != 200:
             error = json.loads(response.text)

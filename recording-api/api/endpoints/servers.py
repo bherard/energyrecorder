@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 """Servers compuption API."""
 # --------------------------------------------------------
 # Module Name : power recording API

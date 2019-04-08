@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 """Restplus library configuration and startup."""
 # --------------------------------------------------------
 # Module Name : power recording API

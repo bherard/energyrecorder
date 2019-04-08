@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 """Record API configuration parameters."""
 # --------------------------------------------------------
 # Module Name : terraHouat power recording API

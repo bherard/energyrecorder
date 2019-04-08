@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 """Recorder API publich datamodel descriptions."""
 # --------------------------------------------------------
 # Module Name : power recording API
