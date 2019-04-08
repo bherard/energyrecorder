@@ -37,12 +37,15 @@ EOF
 function startUwsgi(){
         cat <<EOF > /etc/uwsgi/conf.d/energyrecorder.ini
 [uwsgi]
-plugins = python
+plugins = python3
 chdir = /usr/local/energyrecorder/recording-api
 module = app
 callable = APP
 socket = /tmp/recorder.socket
 chmod-socket = 777
+processes = $(expr $(nproc) + 1)
+enable-threads = True
+
 
 vacuum = true
 die-on-term = true

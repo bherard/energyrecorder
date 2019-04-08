@@ -3,7 +3,7 @@ LABEL maintainer="benoit.herard@orange.com"
 
 EXPOSE 80/tcp
 
-RUN apk --update add git python3 py3-pip bash ca-certificates curl uwsgi-python nginx;\
+RUN apk --update add git python3 py3-pip bash ca-certificates curl uwsgi-python3 nginx;\
     update-ca-certificates ; \
     apk add openssl;\
     pip3 install --upgrade pip; \
@@ -13,7 +13,8 @@ RUN apk --update add git python3 py3-pip bash ca-certificates curl uwsgi-python 
     pip install -r recording-api/requirements.txt;\
     mv /entrypoint.sh /influx-entrypoint.sh;
 
-RUN curl https://raw.githubusercontent.com/bherard/energyrecorder/master/docker/energyrecording-api/recording-api-entrypoint.sh -o /entrypoint.sh;\
+ADD recording-api-entrypoint.sh /entrypoint.sh
+RUN #curl https://raw.githubusercontent.com/bherard/energyrecorder/master/docker/energyrecording-api/recording-api-entrypoint.sh -o /entrypoint.sh;\
 	chmod u+x /entrypoint.sh;\
 	wget https://raw.githubusercontent.com/bherard/energyrecorder/master/influx/create-certs.sh -O /usr/local/bin/create-certs.sh;\
 	chmod u+x /usr/local/bin/create-certs.sh;\
