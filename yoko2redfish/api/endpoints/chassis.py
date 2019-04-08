@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 """Chassis Management."""
 # --------------------------------------------------------
 # Module Name : power recording API
@@ -105,7 +105,7 @@ class ChassisDef(Resource):
         Resource.__init__(self, api, args, kwargs)
 
     def get(self, chassis):  # pylint: disable=locally-disabled,no-self-use
-        """Return pseud chassis def."""
+        """Return pseudo chassis def."""
 
         self.logger.debug("GET /Chassis/%s", chassis)
         ret = {

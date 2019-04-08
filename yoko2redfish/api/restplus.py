@@ -1,6 +1,6 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 # --------------------------------------------------------
-# Module Name : power recording API 
+# Module Name : power recording API
 #               request YOKOGAWA Powermeter with redfish
 # Version : 1.0
 #

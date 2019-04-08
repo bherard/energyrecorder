@@ -3,7 +3,7 @@ LABEL maintainer="benoit.herard@orange.com"
 
 EXPOSE 80/tcp
 
-RUN apk --update add sudo curl git python py-pip bash uwsgi-python nginx;\
+RUN apk --update add sudo curl git python3 py3-pip bash uwsgi-python3 nginx;\
     pip install --upgrade pip; \
     mkdir -p /usr/local/yoko2redfish; \
     cd /usr/local;\

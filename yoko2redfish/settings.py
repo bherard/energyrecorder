@@ -1,6 +1,6 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 # --------------------------------------------------------
-# Module Name : power recording API 
+# Module Name : power recording API
 #               request YOKOGAWA Powermeter with redfish
 # Version : 1.0
 #
@@ -33,7 +33,8 @@ API = {
     "context_root": "/redfish/v1",
     "version": '1.0',
     "title": 'YOKO Powermeter to redfish',
-    "description": 'Minimal implementation to get YOYO Powermeter Power as redfish API.'
+    "description": 'Minimal implementation to get YOYO Powermeter Power '
+                   'as redfish API.'
 }
 
 BIND = None

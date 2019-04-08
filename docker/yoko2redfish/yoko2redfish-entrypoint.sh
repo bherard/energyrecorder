@@ -2,12 +2,14 @@
 function startUwsgi(){
         cat <<EOF > /etc/uwsgi/conf.d/yoko2redfish.ini
 [uwsgi]
-plugins = python
+plugins = python3
 chdir = /usr/local/yoko2redfish
 module = app
 callable = APP
 socket = /tmp/yoko2redfish.socket
 chmod-socket = 777
+processes = $(expr $(nproc) + 1)
+enable-threads = True
 
 vacuum = true
 die-on-term = true
