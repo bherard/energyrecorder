@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 """Common classes and tools for server-collector."""
 # --------------------------------------------------------
 # Module Name : terraHouat  power recording ILO daemon
@@ -84,7 +84,7 @@ class DataPoster(Thread):
                 auth = None
 
             api_uri = self.data_server["base_url"] + "/resources/servers/"
-            api_uri += urllib.quote_plus(self.data["sender"])
+            api_uri += urllib.parse.quote(self.data["sender"])
             self.log.info("[%s]: %s", self.name, api_uri)
             response = requests.post(api_uri + "/consumption",
                                      data=json.dumps(payload),

@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 """data-collector daemon main code."""
 # --------------------------------------------------------
 # Module Name : terraHouat  power recording ILO daemon
@@ -29,9 +29,9 @@ import logging.config
 import signal
 import sys
 import threading
+from threading import Thread
 import time
 import traceback
-from threading import Thread
 
 import yaml
 
@@ -41,6 +41,7 @@ from ilo_gui_collector import ILOGUICollector
 from ilocollector import ILOCollector
 from intel_gui_collector import INTELGUICollector
 from ipmicollector import IPMICollector
+from modbuscollector import ModBUSCollector
 from redfishcollector import RedfishCollector
 
 # Create a list of active pollers
@@ -248,6 +249,18 @@ def get_collector(server, pod, config):
             ipmi_server_conf,
             config["RECORDER_API_SERVER"]
         )
+    elif server["type"] == ModBUSCollector.type:
+        server_conf = {
+            "host": server["host"],
+            "register_address": server["register_address"],
+            "register_type": server["register_type"],
+            "register_order": server["register_order"]
+        }
+        the_collector = ModBUSCollector(
+            pod["environment"],
+            server["id"],
+            server_conf,
+            config["RECORDER_API_SERVER"])
     else:
         msg = "Unsupported power collect method: {}"
         msg += msg.format(server["type"])
@@ -277,7 +290,7 @@ def start_pollers():
         # Backward compatibility (defaut polling interval)
         if "polling_interval" not in a_pod:
             polling_interval = 10
-            logging.warn(
+            logging.warning(
                 "\n\n*******************************\n\n"
                 "\"polling_interval\" is not set in PODS definition yaml file "
                 "(at environment level) using default setting: %ds "

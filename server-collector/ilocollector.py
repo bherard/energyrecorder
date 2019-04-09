@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 """Collect power comsumption via HP ILO."""
 # --------------------------------------------------------
 # Module Name : terraHouat  power recording ILO daemon

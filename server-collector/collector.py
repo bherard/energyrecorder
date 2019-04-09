@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 # --------------------------------------------------------
 # Module Name : terraHouat  power recording Redfish daemon
 # Version : 1.0
@@ -26,11 +26,14 @@
 """Collect power comsumption base class."""
 
 import logging.config
-import time
 import sys
-import traceback
+import threading
 from threading import Thread
+import time
+import traceback
+
 import requests
+
 from common import DataPoster
 
 requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
@@ -38,6 +41,11 @@ requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
 
 class Collector(Thread):
     """Collect power consumption via HP Redfish rest/redfish API."""
+
+    type = "to-be-overloaded-at-implem"
+
+    # Should be replaced by daemon condition at implem class creation
+    condition = threading.Condition()
 
     def __init__(self,
                  environment,
@@ -76,7 +84,8 @@ class Collector(Thread):
         self.name = "{}/{}".format(self.type, server_id)
         self.server_conf = server_conf
         self.environment = environment
-        if server_conf["user"] != "" and\
+        if "user" in server_conf and\
+           server_conf["user"] != "" and\
            server_conf["pass"] != "":
             self.pod_auth = (
                 server_conf["user"], server_conf["pass"])
@@ -104,6 +113,7 @@ class Collector(Thread):
     def get_power(self):
         """Get Power from box (to be implemented)."""
         raise Exception("get_power must be implmented")
+        return 0  # pylint: disable=unreachable
 
     def pre_run(self):
         """Execute code before thread starts."""

@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 """Collect power comsumption via INTEL Web Console (gui scrapping)."""
 # --------------------------------------------------------
 # Module Name : terraHouat  power recording INTEL GUI daemon

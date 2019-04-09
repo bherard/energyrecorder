@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 """Collect power comsumption vi IPMI protocol."""
 # --------------------------------------------------------
 # Module Name : terraHouat  power recording ILO daemon
@@ -49,7 +49,7 @@ class IPMICollector(Collector):
         "674": "Pwr Consumption",                # DELL
         "5771": "POWER_USAGE",    	             # CISCO
         "343": "PS.* Input Power",               # Intel
-        "2011": "Power[0-9]+",                   # Huawei
+        "2011": "Power[0-9]+|Power  ",           # Huawei
         "19046": "Sys Power",                    # Lenovo
     }
 
@@ -76,7 +76,7 @@ class IPMICollector(Collector):
             shell=True,
             stderr=subprocess.STDOUT,
             universal_newlines=True)
-        if "Manufacturer ID" in ipmi_data:
+        if "Manufacturer ID" in str(ipmi_data):
             m_id = subprocess.check_output(
                 'echo "' + ipmi_data + '"' +
                 "| grep 'Manufacturer ID'|" +

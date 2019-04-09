@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 # --------------------------------------------------------
 # Module Name : terraHouat  power recording Redfish daemon
 # Version : 1.1

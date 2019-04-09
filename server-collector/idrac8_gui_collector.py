@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 """Collect power comsumption via DELL IDRAC8 (gui scrapping)."""
 # --------------------------------------------------------
 # Module Name : terraHouat  power recording IDRAC daemon

@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 """Collect power comsumption via Huawei iBmc Web Console (gui scrapping)."""
 # --------------------------------------------------------
 # Module Name : terraHouat  power recording Huawei iBmc GUI daemon
@@ -52,7 +52,7 @@ class IBMCGUICollector(Collector):
         headers = {"User-Agent": self._USER_AGENT,
                    "Content-Type": "application/x-www-form-urlencoded"}
         payload = (
-            "token=" + urllib.quote_plus(session["token"]) +
+            "token=" + urllib.parse.quote(session["token"]) +
             "&str_input=%5B%7B%22class_name%22%3A%22MeIn" +
             "fo%22%2C%22obj_name%22%3A+%22MeInfo%22%2C%2" +
             "2property_list%22%3A%5B%22CpuCurPower%22%2C" +
@@ -129,10 +129,10 @@ class IBMCGUICollector(Collector):
         rqt_url = self.server_conf["base_url"]
         rqt_url += "/bmc/php/processparameter.php"
         payload = ("check_pwd=" +
-                   urllib.quote_plus(self.server_conf["pass"]) +
+                   urllib.parse.quote(self.server_conf["pass"]) +
                    "&logtype=0" +
                    "&user_name=" +
-                   urllib.quote_plus(self.server_conf["user"]) +
+                   urllib.parse.quote(self.server_conf["user"]) +
                    "&func=AddSession" +
                    "&IsKvmApp=0")
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
