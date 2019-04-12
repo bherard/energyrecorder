@@ -253,9 +253,11 @@ def get_collector(server, pod, config):
         server_conf = {
             "host": server["host"],
             "register_address": server["register_address"],
-            "register_type": server["register_type"],
-            "register_order": server["register_order"]
+            "register_type": server["register_type"]
         }
+        if "register_order" in server:
+            server_conf["register_order"] = server["register_order"]
+
         the_collector = ModBUSCollector(
             pod["environment"],
             server["id"],
@@ -275,7 +277,7 @@ def start_pollers():
     # Load yaml conf file
     with open("conf/collector-settings.yaml", 'r') as stream:
         try:
-            config = yaml.load(stream)
+            config = yaml.safe_load(stream)
         except yaml.YAMLError:
             logging.exception("Error while loading config")
             sys.exit()

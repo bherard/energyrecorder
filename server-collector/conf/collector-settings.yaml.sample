@@ -84,6 +84,23 @@ PODS:
     # Following parameter is optional (default is True)
     # active: False|True 
 
+  - host: server-ip-or-name[:port]
+    id: server-id
+    type: modbus
+    register_address: reg-number
+    # Data type stored in register
+    # MBI: signed 16b integer (ModBus Integer)
+    # MBU: unsigned 16b integer (ModBus Unsigned)
+    # MBL: signed 32 integer (ModBus Long) require register_order: right for datataker
+    # MBF: 32b float, (ModBux Float) require register_order: left for datataker
+    register_type: MBI
+    # 16b WORDs order for MBL and MBF
+    # lowest weight WORD at right (default)
+    #register_order: right
+    # lowest weight WORD at left
+    #register_order: left
+    active: True
+
 RECORDER_API_SERVER:
   base_url: http://energy.opnfv.fr
   pass: ''

@@ -120,7 +120,7 @@ def load_config():
     LOG.info("Server power consumption daemon is starting")
     with open("conf/webapp-settings.yaml", 'r') as stream:
         try:
-            config = yaml.load(stream)
+            config = yaml.safe_load(stream)
             settings.BIND = config["BIND"]
             settings.INFLUX = config["INFLUX"]
             if "ALWAYS_RECORD" in config:
