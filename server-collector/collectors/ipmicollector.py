@@ -28,7 +28,7 @@ import traceback
 import sys
 import subprocess
 
-from collector import Collector
+from utils.collector import Collector
 
 
 class IPMICollector(Collector):

@@ -28,7 +28,7 @@ import traceback
 import xml.etree.ElementTree as ET
 from threading import Thread
 import requests
-from collector import Collector
+from utils.collector import Collector
 
 requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
 

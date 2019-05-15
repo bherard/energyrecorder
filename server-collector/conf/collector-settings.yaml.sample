@@ -80,25 +80,61 @@ PODS:
     id: server-id
     type: ipmi
     user: ipmi-user
-    pass: ipme-user-password
+    pass: ipmi-user-password
     # Following parameter is optional (default is True)
     # active: False|True 
 
+
+# Assume that collected CSV files have the following structure:
+#   1st column: datetime of measurement with format:
+#       YYYY/MM/DD HH:MI:SS.ssss
+#   2nd column: TIMEZONE for measurement datetime with format
+#       HHMI offset from UTC Ex. +0200, -0500
+#       or
+#       +HH:MI offset from UTC Ex. +02:00, -05:00
+#       or
+#       Z for UTC
+#       or
+#       Valid full timezone name ex Europe/Paris
+#       or
+#       With any other value, will use host TZ
+#   1st line: Sensors name and unit in format:
+#       sensor name (Unit)
+#       Ex: "Timestamp","TZ","U_bat_1 (V)","I_load_1 (A)","I_bat_1 (A)"
+#   Following lines: data as float or integer
+#       Ex: 2017/07/17 09:04:00.000,n,56.370628,0.106086,22.658
+  - host: 127.0.0.1
+    id: server-id
+    type: csvftp
+    user: user
+    pass: path
+    root_dir: /data/dir/on/server
+    active: True
+    # optional parameters
+    # default file_filter: *
+    file_filter: "*.CSV"
+    # default encoding: utf8
+    encoding: "utf8"
+    # default purge: False remove file from FTP server when data are send
+    purge: True 
   - host: server-ip-or-name[:port]
     id: server-id
     type: modbus
-    register_address: reg-number
-    # Data type stored in register
-    # MBI: signed 16b integer (ModBus Integer)
-    # MBU: unsigned 16b integer (ModBus Unsigned)
-    # MBL: signed 32 integer (ModBus Long) require register_order: right for datataker
-    # MBF: 32b float, (ModBux Float) require register_order: left for datataker
-    register_type: MBI
-    # 16b WORDs order for MBL and MBF
-    # lowest weight WORD at right (default)
-    #register_order: right
-    # lowest weight WORD at left
-    #register_order: left
+    sensors:
+      - name: power
+        unit: W
+        register_address: reg-number
+        # Data type stored in register
+        # MBI: signed 16b integer (ModBus Integer)
+        # MBU: unsigned 16b integer (ModBus Unsigned)
+        # MBL: signed 32 integer (ModBus Long) require register_order: right for datataker
+        # MBF: 32b float, (ModBux Float) require register_order: left for datataker
+        register_type: MBI
+        # 16b WORDs order for MBL and MBF
+        # lowest weight WORD at right (default)
+        #register_order: right
+        # lowest weight WORD at left
+        #register_order: left
     active: True
 
 RECORDER_API_SERVER:

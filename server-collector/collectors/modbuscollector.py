@@ -25,10 +25,10 @@
 import struct
 
 from pyModbusTCP.client import ModbusClient
-from collector import Collector
+from utils.collector import SensorsCollector
 
 
-class ModBUSCollector(Collector):
+class ModBUSCollector(SensorsCollector):
     """Collect power consumption ModBUS protocol."""
 
     type = "modbus"
@@ -110,29 +110,36 @@ class ModBUSCollector(Collector):
 
         return ret
 
-    def get_power(self):
+    def get_sensors(self):
         """Get data from remote modbus compliant device."""
 
-        result = None
+        result = []
 
         if self.modbus_client.open():
-            vals = self.modbus_client.read_holding_registers(
-                self.server_conf["register_address"],
-                self._get_data_size(
-                    self.server_conf["register_type"]
+            for sensor in self.server_conf["sensors"]:
+                vals = self.modbus_client.read_holding_registers(
+                    sensor["register_address"],
+                    self._get_data_size(
+                        sensor["register_type"]
+                    )
                 )
-            )
+                if "register_order" in sensor and\
+                   sensor["register_order"] == "left":
+                    vals = self._revert_list(vals)
+
+                res_val = self._convert_to_type(
+                    vals,
+                    sensor["register_type"]
+                )
+                result.append(
+                    {
+                        "sensor": sensor["name"],
+                        "unit": sensor["unit"],
+                        "value": res_val
+                    }
+                )
+
             self.modbus_client.close()
-
-            if "register_order" in self.server_conf and\
-               self.server_conf["register_order"] == "left":
-                vals = self._revert_list(vals)
-
-            result = self._convert_to_type(
-                vals,
-                self.server_conf["register_type"]
-            )
-
         else:
             self.log.error(
                 "[%s]: Unable to get data from '%s'",

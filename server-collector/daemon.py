@@ -35,14 +35,15 @@ import traceback
 
 import yaml
 
-from ibmc_gui_collector import IBMCGUICollector
-from idrac8_gui_collector import IDRAC8GUICollector
-from ilo_gui_collector import ILOGUICollector
-from ilocollector import ILOCollector
-from intel_gui_collector import INTELGUICollector
-from ipmicollector import IPMICollector
-from modbuscollector import ModBUSCollector
-from redfishcollector import RedfishCollector
+from collectors.csvftpcollector import CSVFTPCollector
+from collectors.ibmc_gui_collector import IBMCGUICollector
+from collectors.idrac8_gui_collector import IDRAC8GUICollector
+from collectors.ilo_gui_collector import ILOGUICollector
+from collectors.ilocollector import ILOCollector
+from collectors.intel_gui_collector import INTELGUICollector
+from collectors.ipmicollector import IPMICollector
+from collectors.modbuscollector import ModBUSCollector
+from collectors.redfishcollector import RedfishCollector
 
 # Create a list of active pollers
 POLLERS = []
@@ -109,6 +110,9 @@ class Poller(Thread):
             "[%s]: Server threads are started, entering polling loop!",
             self.name
         )
+        # Give a chance to collectors to start
+        self._interruptible_sleep(0.5)
+
         while self.running:
             # Notfy Collector threads to get power
             self._notity_collectors()
@@ -252,17 +256,35 @@ def get_collector(server, pod, config):
     elif server["type"] == ModBUSCollector.type:
         server_conf = {
             "host": server["host"],
-            "register_address": server["register_address"],
-            "register_type": server["register_type"]
+            "sensors": server["sensors"],
         }
-        if "register_order" in server:
-            server_conf["register_order"] = server["register_order"]
 
         the_collector = ModBUSCollector(
             pod["environment"],
             server["id"],
             server_conf,
             config["RECORDER_API_SERVER"])
+    elif server["type"] == CSVFTPCollector.type:
+        ftp_server_conf = {
+            "host": server["host"],
+            "user": server["user"],
+            "pass": server["pass"],
+            "root_dir": server["root_dir"],
+            "purge": server["purge"]
+        }
+
+        # Optional settings
+        if "file_filter" in server:
+            ftp_server_conf["file_filter"] = server["file_filter"]
+        if "encoding" in server:
+            ftp_server_conf["encoding"] = server["encoding"]
+
+        the_collector = CSVFTPCollector(
+            pod["environment"],
+            server["id"],
+            ftp_server_conf,
+            config["RECORDER_API_SERVER"]
+        )
     else:
         msg = "Unsupported power collect method: {}"
         msg += msg.format(server["type"])
