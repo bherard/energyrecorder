@@ -36,6 +36,36 @@ POWER_POST = API.model('powerPost', {
                                  description='Recorder environment \
                                               identifier'),
 })
+MEASUREMENT = API.model("measurement", {
+    'sensor': fields.String(
+        required=True,
+        description="Sensor/measurment name"
+    ),
+    'unit': fields.String(
+        required=True,
+        description='Measurement unit'
+    ),
+    'value': fields.Float(
+        required=True,
+        decription='Measurement value'
+    ),
+    'time': fields.Integer(
+        required=False,
+        description="Measurement timestamp (default= current_timestamp)"
+    )
+})
+MEASUREMENT_POST = API.model("measurementPost", {
+    'environment': fields.String(
+        required=True,
+        description='Recorder environment identifier'
+    ),
+    "measurements": fields.List(
+        fields.Nested(MEASUREMENT),
+        required=True,
+        description="List of measurements to store"
+    )
+
+})
 STEP_POST = API.model('stepPost', {
     'step': fields.String(required=True,
                           description='New step for current \
@@ -48,17 +78,17 @@ RECORDER_POST = API.model('recorderPost', {
                           description='Current step of this scenario'),
 })
 
-API_STATUS = API.model('NRGAPIStatus', {
+API_STATUS = API.model('APIStatus', {
     'status': fields.String(required=True,
                             decription='Current API status')
 })
 
-RUNNING_SCENARIO = API.inherit('NRGRunningScenario', RECORDER_POST, {
+RUNNING_SCENARIO = API.inherit('runningScenario', RECORDER_POST, {
     'environment': fields.String(required=True,
                                  description='Recorder identifier'),
 })
 
-POWER_MEASUREMENT = API.inherit('NRGPowerMeasurement', RUNNING_SCENARIO, {
+POWER_MEASUREMENT = API.inherit('powerMeasurement', RUNNING_SCENARIO, {
     'power': fields.Integer(required=True,
                             description='Power consumption in Watts'),
 })
@@ -66,12 +96,12 @@ POWER_MEASUREMENT = API.inherit('NRGPowerMeasurement', RUNNING_SCENARIO, {
 
 # Model description for returned objects
 # pylint: disable=locally-disabled,too-few-public-methods
-class NRGRunningScenarioClass(object):
+class RunningScenarioClass(object):
     """RunningScenario public object."""
 
     def __init__(self, environment, scenario, step):
         """
-        Constructor: create an instance of NRGRunningScenarioClass.
+        Constructor: create an instance of RunningScenarioClass.
 
             :param environment: Environment on witch power is collected
             :type environment: string
@@ -90,12 +120,12 @@ class NRGRunningScenarioClass(object):
 
 
 # pylint: disable=locally-disabled,too-few-public-methods
-class NRGPowerMeasurementClass(NRGRunningScenarioClass):
+class PowerMeasurementClass(RunningScenarioClass):
     """PowerMeasurement public object."""
 
     def __init__(self, environment, power, scenario, step):
         """
-        Constructor: create an instance of NRGRunningScenarioClass.
+        Constructor: create an instance of RunningScenarioClass.
 
             :param environment: Environment on witch power is collected
             :type environment: string
@@ -111,17 +141,17 @@ class NRGPowerMeasurementClass(NRGRunningScenarioClass):
 
 
         """
-        NRGRunningScenarioClass.__init__(self, environment, scenario, step)
+        RunningScenarioClass.__init__(self, environment, scenario, step)
         self.power = power
 
 
 # pylint: disable=locally-disabled,too-few-public-methods
-class NRGAPIStatusClass(object):
+class APIStatusClass(object):
     """API Monitoring status."""
 
     def __init__(self, status):
         """
-        Constructor: create an instance of NRGAPIStatusClass.
+        Constructor: create an instance of APIStatusClass.
 
             :param status: Current API status
             :type status: string

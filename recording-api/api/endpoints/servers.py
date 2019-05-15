@@ -32,7 +32,7 @@ from werkzeug.exceptions import NotFound
 
 import settings
 from api.datamodel import POWER_MEASUREMENT, POWER_POST
-from api.datamodel import NRGPowerMeasurementClass, NRGRunningScenarioClass
+from api.datamodel import PowerMeasurementClass, RunningScenarioClass
 from api.restplus import API as api
 from api.endpoints.recorder import Recorder
 
@@ -41,6 +41,7 @@ NS = api.namespace('servers', description='Operations related to servers')
 
 
 @NS.route('/<string:server>/consumption')
+@NS.deprecated
 class ServerConsumption(Resource):
     """Server consumption management API."""
 
@@ -50,7 +51,11 @@ class ServerConsumption(Resource):
     @api.marshal_with(POWER_MEASUREMENT)
     def post(self, server):  # pylint: disable=locally-disabled,no-self-use
         """
-        Power consumption receiver.
+        Power consumption receiver (see /equipments/{equipement}/measurements).
+
+        Use instead /equipments/{equipement}/measurements with
+        <code>[{"sensor": "power", "unit": "W", "value": power-value}]</code>
+        as measurements payload<hr>
 
         Store a new power consumption measurement for a particular server
             :param server: Environement identifier
@@ -75,7 +80,7 @@ class ServerConsumption(Resource):
             )
         except NotFound as exc:
             if settings.ALWAYS_RECORD:
-                recorder = NRGRunningScenarioClass(
+                recorder = RunningScenarioClass(
                     data.get("environment"),
                     "n/s",
                     "n/s"
@@ -83,10 +88,12 @@ class ServerConsumption(Resource):
             else:
                 raise exc
 
-        result = NRGPowerMeasurementClass(recorder.environment,
-                                          data.get("power"),
-                                          recorder.scenario,
-                                          recorder.step)
+        result = PowerMeasurementClass(
+            recorder.environment,
+            data.get("power"),
+            recorder.scenario,
+            recorder.step
+        )
 
         influx_data = "PowerMeasurement,hardware="
         influx_data += server.replace(' ', '\\ ')
@@ -117,5 +124,18 @@ class ServerConsumption(Resource):
             log_msg = "Error while storing measurment: {}"
             log_msg = log_msg.format(response.text)
             api.abort(500, log_msg)
+
+        influx_data = "SensorMeasurement,equipement="
+        influx_data += server.replace(' ', '\\ ')
+        influx_data += ",environment="
+        influx_data += recorder.environment.replace(' ', '\\ ')
+        influx_data += ",scenario="
+        influx_data += recorder.scenario.replace(' ', '\\ ')
+        influx_data += ",step="
+        influx_data += recorder.step.replace(' ', '\\ ')
+        influx_data += ",sensor=power"
+        influx_data += ",unit=W"
+        influx_data += " value="
+        influx_data += str(data["power"])
 
         return result

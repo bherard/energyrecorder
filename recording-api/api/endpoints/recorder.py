@@ -32,7 +32,7 @@ import requests
 from flask_restplus import Resource
 from flask import request
 import settings
-from api.datamodel import RUNNING_SCENARIO, NRGRunningScenarioClass
+from api.datamodel import RUNNING_SCENARIO, RunningScenarioClass
 from api.datamodel import STEP_POST, RECORDER_POST
 from api.restplus import API as api
 
@@ -136,7 +136,7 @@ class Recorder(Resource):
                     4
                 ]
                 if started == 1:
-                    result = NRGRunningScenarioClass(env, scenario, step)
+                    result = RunningScenarioClass(env, scenario, step)
                     return result
                 else:
                     err_text = "Can't find any recording session "
@@ -173,7 +173,7 @@ class Recorder(Resource):
             :type step: string
 
         """
-        result = NRGRunningScenarioClass(env, scenario, step)
+        result = RunningScenarioClass(env, scenario, step)
 
         influx_data = "RunningScenarios,environment="
         influx_data += result.environment.replace(' ', '\\ ')

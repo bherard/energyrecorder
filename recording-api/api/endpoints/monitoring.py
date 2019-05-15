@@ -31,7 +31,7 @@ import requests
 
 from flask_restplus import Resource
 import settings
-from api.datamodel import API_STATUS, NRGAPIStatusClass
+from api.datamodel import API_STATUS, APIStatusClass
 from api.restplus import API as api
 
 
@@ -48,7 +48,7 @@ class Ping(Resource):
     def connect_influx(self):
         """Try to connect influxDB."""
 
-        result = NRGAPIStatusClass("OK")
+        result = APIStatusClass("OK")
         if settings.INFLUX["user"] is not None:
             auth = (settings.INFLUX["user"], settings.INFLUX["pass"])
         else:

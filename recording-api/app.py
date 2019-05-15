@@ -35,6 +35,7 @@ import settings
 from api.endpoints.monitoring import NS as monitoring_namespace
 from api.endpoints.recorder import NS as recorder_namespace
 from api.endpoints.servers import NS as servers_namespace
+from api.endpoints.equipements import NS as equipements_namespace
 from api.restplus import API as api
 
 APP = Flask(__name__)
@@ -81,10 +82,13 @@ def initialize_app(flask_app):
     """
     configure_app(flask_app)
 
-    blueprint = Blueprint('api', __name__,
-                          url_prefix=settings.API["context_root"])
+    blueprint = Blueprint(
+        'api', __name__,
+        url_prefix=settings.API["context_root"]
+    )
     api.init_app(blueprint)
 
+    api.add_namespace(equipements_namespace)
     api.add_namespace(servers_namespace)
     api.add_namespace(recorder_namespace)
     api.add_namespace(monitoring_namespace)
