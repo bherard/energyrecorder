@@ -138,4 +138,14 @@ class ServerConsumption(Resource):
         influx_data += " value="
         influx_data += str(data["power"])
 
+        response = requests.post(
+            influx_url,
+            data=influx_data,
+            auth=auth,
+            verify=False)
+        if response.status_code != 204:
+            log_msg = "Error while storing measurment: {}"
+            log_msg = log_msg.format(response.text)
+            api.abort(500, log_msg)
+
         return result
