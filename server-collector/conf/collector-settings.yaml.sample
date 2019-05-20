@@ -136,6 +136,12 @@ PODS:
         # lowest weight WORD at left
         #register_order: left
     active: True
+    # Collect data dataged as dynamic
+    # from rpimonitor https://github.com/XavierBerger/RPi-Monitor 
+  - host: server-ip-or-name[:port]
+    id: server-id
+    type: rpimon
+    active: False
 
 RECORDER_API_SERVER:
   base_url: http://energy.opnfv.fr

@@ -36,14 +36,15 @@ import traceback
 import yaml
 
 from collectors.csvftpcollector import CSVFTPCollector
-from collectors.ibmc_gui_collector import IBMCGUICollector
-from collectors.idrac8_gui_collector import IDRAC8GUICollector
-from collectors.ilo_gui_collector import ILOGUICollector
-from collectors.ilocollector import ILOCollector
-from collectors.intel_gui_collector import INTELGUICollector
-from collectors.ipmicollector import IPMICollector
 from collectors.modbuscollector import ModBUSCollector
-from collectors.redfishcollector import RedfishCollector
+from collectors.rpimonitorcollector import RPIMONCollector
+from collectors.power.ibmc_gui_collector import IBMCGUICollector
+from collectors.power.idrac8_gui_collector import IDRAC8GUICollector
+from collectors.power.ilo_gui_collector import ILOGUICollector
+from collectors.power.ilocollector import ILOCollector
+from collectors.power.intel_gui_collector import INTELGUICollector
+from collectors.power.ipmicollector import IPMICollector
+from collectors.power.redfishcollector import RedfishCollector
 
 # Create a list of active pollers
 POLLERS = []
@@ -280,6 +281,17 @@ def get_collector(server, pod, config):
             ftp_server_conf["encoding"] = server["encoding"]
 
         the_collector = CSVFTPCollector(
+            pod["environment"],
+            server["id"],
+            ftp_server_conf,
+            config["RECORDER_API_SERVER"]
+        )
+    elif server["type"] == RPIMONCollector.type:
+        ftp_server_conf = {
+            "host": server["host"],
+        }
+
+        the_collector = RPIMONCollector(
             pod["environment"],
             server["id"],
             ftp_server_conf,
