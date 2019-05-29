@@ -44,7 +44,7 @@ class RPIMONCollector(SensorsCollector):
         "load15": "U-Ref",
         "uptime": "s",
         "load1": "U-Ref",
-        "soc_temp": "°C",
+        "soc_temp": "deg. C",
         "sdcard_root_used": "Mo",
         "swap_used": "Mo",
         "load5": "U-Ref",
