@@ -45,6 +45,80 @@ LOG = logging.getLogger(__name__)
 CONFIG = None
 
 
+class ProxyFix():
+
+    """This middleware can be applied to add HTTP proxy support to an
+    application that was not designed with HTTP proxies in mind.  It
+    sets `REMOTE_ADDR`, `HTTP_HOST` from `X-Forwarded` headers.  While
+    Werkzeug-based applications already can use
+    :py:func:`werkzeug.wsgi.get_host` to retrieve the current host even if
+    behind proxy setups, this middleware can be used for applications which
+    access the WSGI environment directly.
+
+    If you have more than one proxy server in front of your app, set
+    `num_proxies` accordingly.
+
+    Do not use this middleware in non-proxy setups for security reasons.
+
+    The original values of `REMOTE_ADDR` and `HTTP_HOST` are stored in
+    the WSGI environment as `werkzeug.proxy_fix.orig_remote_addr` and
+    `werkzeug.proxy_fix.orig_http_host`.
+
+    :param app: the WSGI application
+    :param num_proxies: the number of proxy servers in front of the app.
+    """
+
+    def __init__(self, app, num_proxies=1):
+        self.app = app
+        self.num_proxies = num_proxies
+
+    def get_remote_addr(self, forwarded_for):
+        """Selects the new remote addr from the given list of ips in
+        X-Forwarded-For.  By default it picks the one that the `num_proxies`
+        proxy server provides.  Before 0.9 it would always pick the first.
+
+        .. versionadded:: 0.8
+        """
+        if len(forwarded_for) >= self.num_proxies:
+            return forwarded_for[self.num_proxies-1]
+        return None
+
+    def get_remote_host(self, forwarded_host):
+        """Selects the new remote host from the given list of hosts in
+        X-Forwarded-Host.  By default it picks the one that the `num_proxies`
+        proxy server provides.
+
+        """
+        if len(forwarded_host) >= self.num_proxies:
+            return forwarded_host[self.num_proxies-1]
+        return None
+
+    def __call__(self, environ, start_response):
+        getter = environ.get
+        forwarded_proto = getter('HTTP_X_FORWARDED_PROTO', '')
+        forwarded_for = getter('HTTP_X_FORWARDED_FOR', '').split(',')
+        forwarded_host = getter('HTTP_X_FORWARDED_HOST', '').split(',')
+        environ.update({
+            'werkzeug.proxy_fix.orig_wsgi_url_scheme':
+                getter('wsgi.url_scheme'),
+            'werkzeug.proxy_fix.orig_remote_addr':
+                getter('REMOTE_ADDR'),
+            'werkzeug.proxy_fix.orig_http_host':
+                getter('HTTP_HOST')
+        })
+        forwarded_for = [x for x in [x.strip() for x in forwarded_for] if x]
+        forwarded_host = [x for x in [x.strip() for x in forwarded_host] if x]
+
+        remote_addr = self.get_remote_addr(forwarded_for)
+        if remote_addr is not None:
+            environ['REMOTE_ADDR'] = remote_addr
+        if forwarded_host:
+            environ['HTTP_HOST'] = self.get_remote_host(forwarded_host)
+        if forwarded_proto:
+            environ['wsgi.url_scheme'] = forwarded_proto
+        return self.app(environ, start_response)
+
+
 def configure_app(flask_app):
     """Load application configuration to flask.
 
@@ -81,6 +155,7 @@ def initialize_app(flask_app):
         :type flask_app: Flask
     """
     configure_app(flask_app)
+    flask_app.wsgi_app = ProxyFix(flask_app.wsgi_app)
 
     blueprint = Blueprint(
         'api', __name__,
