@@ -147,3 +147,6 @@ RECORDER_API_SERVER:
   base_url: http://energy.opnfv.fr
   pass: ''
   user: ''
+  # Uncomment following line to bypass SSL certifcate check (NOT RECOMMANDED)
+  #verify_cert: True
+

@@ -82,16 +82,24 @@ class PowerPoster(Thread):
                 )
             else:
                 auth = None
+            
+            if "verify_cert" in self.data_server:
+                verify_cert = self.data_server["verify_cert"]
+            else:
+                verify_cert = True
 
             api_uri = self.data_server["base_url"] + "/resources/servers/"
             api_uri += urllib.parse.quote(self.data["sender"])
             self.log.info("[%s]: %s", self.name, api_uri)
-            response = requests.post(api_uri + "/consumption",
-                                     data=json.dumps(payload),
-                                     auth=auth,
-                                     headers={
-                                         'content-type': 'application/json'
-                                     })
+            response = requests.post(
+                api_uri + "/consumption",
+                data=json.dumps(payload),
+                auth=auth,
+                headers={
+                    'content-type': 'application/json'
+                },
+                verify=verify_cert
+            )
 
             self.log.debug(
                 '[%s]: Message forwarded to data aggregator',
@@ -166,6 +174,11 @@ class SensorsPoster(Thread):
             else:
                 auth = None
 
+            if "verify_cert" in self.data_server:
+                verify_cert = self.data_server["verify_cert"]
+            else:
+                verify_cert = True
+
             api_uri = self.data_server["base_url"] + "/resources/equipments/"
             api_uri += urllib.parse.quote(self.data["sender"])
             api_uri += "/measurements"
@@ -176,7 +189,8 @@ class SensorsPoster(Thread):
                 auth=auth,
                 headers={
                     'content-type': 'application/json'
-                }
+                },
+                verify=verify_cert
             )
 
             self.log.debug(
