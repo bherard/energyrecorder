@@ -106,7 +106,7 @@ class CSVFTPCollector(SensorsCollector):
         elif re.match(r"^[A-Z|a-z]*/[A-Z|a-z]*", str_tz):
             # TZ is full name like Europe/Paris
 
-            # Get timezone offet from UTC (with DST) form date and TZ name
+            # Get timezone offet from UTC (wverify_certith DST) form date and TZ name
             data_dt = datetime.datetime.strptime(
                 str_datetime,
                 "%Y/%m/%d %H:%M:%S.%f"
@@ -123,6 +123,7 @@ class CSVFTPCollector(SensorsCollector):
 
         else:
             # str_tz is not a valid TZ
+            # and not TZ specified for connector
             # Will use host timezone
             fmt = "%Y/%m/%d %H:%M:%S.%f"
             str_tz = ""
@@ -164,7 +165,11 @@ class CSVFTPCollector(SensorsCollector):
         for line in data:
             if line != "":
                 cols = line.split(',')
-                timestamp = self._get_timestamp(cols[0], cols[1])
+                if "tz" in self.server_conf:
+                    str_tz = self.server_conf["tz"]
+                else:
+                    str_tz = cols[1]
+                timestamp = self._get_timestamp(cols[0], str_tz)
                 cols.pop(0)
                 cols.pop(0)
                 i = 0

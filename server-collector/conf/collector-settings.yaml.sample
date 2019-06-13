@@ -116,7 +116,11 @@ PODS:
     # default encoding: utf8
     encoding: "utf8"
     # default purge: False remove file from FTP server when data are send
-    purge: True 
+    purge: True
+    # Optional, overide TZ for CSV (or host TZ if no TZ in CSV) with a 
+    # specific TZ  Ex:. Europe/Paris
+    tz: Europe/Paris
+
   - host: server-ip-or-name[:port]
     id: server-id
     type: modbus

@@ -271,7 +271,8 @@ def get_collector(server, pod, config):
             "user": server["user"],
             "pass": server["pass"],
             "root_dir": server["root_dir"],
-            "purge": server["purge"]
+            "purge": server["purge"],
+            "tz": server["tz"],
         }
 
         # Optional settings
