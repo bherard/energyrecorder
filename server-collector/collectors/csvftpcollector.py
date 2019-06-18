@@ -43,6 +43,7 @@
 import datetime
 import logging
 import re
+import time
 from ftplib import FTP
 
 import pytz
@@ -63,7 +64,7 @@ class CSVFTPCollector(SensorsCollector):
         if "file_filter" not in self.server_conf:
             self.server_conf["file_filter"] = "*"
         if "encoding" not in self.server_conf:
-            self.server_conf["encoding"] = "utf"
+            self.server_conf["encoding"] = "utf8"
 
     def _get_headers_def(self, def_line):
         """Return a list of sensors definition from CVS cols. def line."""
@@ -77,10 +78,14 @@ class CSVFTPCollector(SensorsCollector):
         for col in cols:  # format: "sensor_name or desc (Unit)"
             sensor = col.split(" (")
 
+            if len(sensor) > 1:
+                unit = sensor[1].replace(")", "")
+            else:
+                unit = "n/d"
             headers.append(
                 {
                     "sensor": sensor[0],
-                    "unit": sensor[1].replace(")", "")
+                    "unit": unit
                 }
             )
         return headers
@@ -95,8 +100,11 @@ class CSVFTPCollector(SensorsCollector):
                         - Python offest from UTC (ex.: +0200)
                         - Full name (ex.: Europe/Paris)
                         - "Z" (zulu i.e UTC)
+
+                Note: date may also be YYYY-MM-DD
         """
 
+        str_datetime = str_datetime.replace("-", "/").replace('"', "")
         if re.match(r"^[+|-][0-2][0-3]:?[0-5][0-9]|Z$", str_tz):
             # TZ is offet from UTC with DST like +0200  or "Z"
             # (eventually convert [+|-]HH:MI form to [+|-]HHMI or Z to +0000
@@ -106,7 +114,8 @@ class CSVFTPCollector(SensorsCollector):
         elif re.match(r"^[A-Z|a-z]*/[A-Z|a-z]*", str_tz):
             # TZ is full name like Europe/Paris
 
-            # Get timezone offet from UTC (wverify_certith DST) form date and TZ name
+            # Get timezone offet from UTC (wverify_certith DST) form 
+            # date and TZ name
             data_dt = datetime.datetime.strptime(
                 str_datetime,
                 "%Y/%m/%d %H:%M:%S.%f"
@@ -127,6 +136,11 @@ class CSVFTPCollector(SensorsCollector):
             # Will use host timezone
             fmt = "%Y/%m/%d %H:%M:%S.%f"
             str_tz = ""
+
+        if not re.match(r".*\.[0-9]*$", str_datetime):
+            # datetime don't have millis. Add arbitrary
+            millis = int(round(time.time() * 1000))
+            str_datetime = str_datetime + "." + str(millis % 1000)
 
         res = int(
             datetime.datetime.strptime(
@@ -164,28 +178,38 @@ class CSVFTPCollector(SensorsCollector):
 
         for line in data:
             if line != "":
-                cols = line.split(',')
-                if "tz" in self.server_conf:
-                    str_tz = self.server_conf["tz"]
-                else:
-                    str_tz = cols[1]
-                timestamp = self._get_timestamp(cols[0], str_tz)
-                cols.pop(0)
-                cols.pop(0)
-                i = 0
-                while i < len(cols):
-                    try:
-                        res.append(
-                            {
-                                "sensor": headers[i]["sensor"],
-                                "unit": headers[i]["unit"],
-                                "value": float(cols[i]),
-                                "time": timestamp
-                            }
-                        )
-                    except ValueError:
-                        self.log.debug("%s is not a valid value", cols[i])
-                    i += 1
+                try:
+                    cols = line.split(',')
+                    if "tz" in self.server_conf:
+                        str_tz = self.server_conf["tz"]
+                    else:
+                        str_tz = cols[1]
+                    timestamp = self._get_timestamp(cols[0], str_tz)
+                    cols.pop(0)
+                    cols.pop(0)
+                    i = 0
+                    while i < len(cols):
+                        try:
+                            res.append(
+                                {
+                                    "sensor": headers[i]["sensor"],
+                                    "unit": headers[i]["unit"],
+                                    "value": float(cols[i]),
+                                    "time": timestamp
+                                }
+                            )
+                        except ValueError:
+                            self.log.debug(
+                                "'%s' is not a valid value", cols[i]
+                            )
+                        i += 1
+                except Exception as exc:  # pylint: disable=broad-except
+                    self.log.warning(
+                        "Can not parse line %s (%s): Skipping...",
+                        line,
+                        exc
+                    )
+
         return res
 
     def _get_ftp_connection(self):
@@ -217,6 +241,14 @@ class CSVFTPCollector(SensorsCollector):
             result += self._get_file_data(filename, ftp_client)
             files.append(filename)
 
+            if "max_files" in self.server_conf and \
+               len(files) > self.server_conf["max_files"]:
+                self.log.warning(
+                    "File count exceed %d: breaking",
+                    self.server_conf["max_files"]
+                )
+                break
+
         self.on_send_ok(self.remove_files, files)
 
         ftp_client.close()
@@ -240,11 +272,12 @@ class CSVFTPCollector(SensorsCollector):
 def main():
     """Execute basic test."""
     logging.basicConfig(level=logging.DEBUG)
+
     ftp_server_conf = {
         "host": "localhost",
         "user": "foo",
         "pass": "bar",
-        "root_dir": "/home/foo/ftpdir",
+        "root_dir": "/home/foo/ftpdir/csv_datataker",
         "purge": False,
         "file_filter": "*CSV",
         "encoding": "utf8"
@@ -257,7 +290,7 @@ def main():
         "http://foo.bar.net"
     )
 
-    the_collector.log.debug(the_collector.get_sensors())
+    the_collector.log.info(the_collector.get_sensors())
 
 
 if __name__ == "__main__":

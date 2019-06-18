@@ -87,7 +87,8 @@ PODS:
 
 # Assume that collected CSV files have the following structure:
 #   1st column: datetime of measurement with format:
-#       YYYY/MM/DD HH:MI:SS.ssss
+#       YYYY/MM/DD HH:MI:SS[.sss]
+#       Note: date may also use the form YYYY-MM-DD
 #   2nd column: TIMEZONE for measurement datetime with format
 #       HHMI offset from UTC Ex. +0200, -0500
 #       or
@@ -95,9 +96,9 @@ PODS:
 #       or
 #       Z for UTC
 #       or
-#       Valid full timezone name ex Europe/Paris
+#       Valid full timezone name (ex Europe/Paris)
 #       or
-#       With any other value, will use host TZ
+#       With any other value, will use host TZ (or TZ defined bellow)
 #   1st line: Sensors name and unit in format:
 #       sensor name (Unit)
 #       Ex: "Timestamp","TZ","U_bat_1 (V)","I_load_1 (A)","I_bat_1 (A)"
@@ -112,14 +113,18 @@ PODS:
     active: True
     # optional parameters
     # default file_filter: *
-    file_filter: "*.CSV"
+    # file_filter: "*.CSV"
     # default encoding: utf8
-    encoding: "utf8"
+    # encoding: "utf8"
     # default purge: False remove file from FTP server when data are send
-    purge: True
+    # purge: True
     # Optional, overide TZ for CSV (or host TZ if no TZ in CSV) with a 
     # specific TZ  Ex:. Europe/Paris
-    tz: Europe/Paris
+    # tz: Europe/Paris
+    # Optional: Maximum number of file to proceed in 1 step/collect
+    # Note: if maximum is reached and if old files are not purged, newer files
+    # will never be proceed: take care
+    # max_files: 10
 
   - host: server-ip-or-name[:port]
     id: server-id

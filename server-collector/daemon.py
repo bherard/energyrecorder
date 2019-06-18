@@ -271,8 +271,6 @@ def get_collector(server, pod, config):
             "user": server["user"],
             "pass": server["pass"],
             "root_dir": server["root_dir"],
-            "purge": server["purge"],
-            "tz": server["tz"],
         }
 
         # Optional settings
@@ -280,6 +278,12 @@ def get_collector(server, pod, config):
             ftp_server_conf["file_filter"] = server["file_filter"]
         if "encoding" in server:
             ftp_server_conf["encoding"] = server["encoding"]
+        if "tz" in server: 
+            ftp_server_conf["tz"] = server["tz"]
+        if "max_files" in server: 
+            ftp_server_conf["max_files"] = server["max_files"]
+        if "purge" in server: 
+            ftp_server_conf["purge"] = server["purge"]
 
         the_collector = CSVFTPCollector(
             pod["environment"],
