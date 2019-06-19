@@ -108,7 +108,7 @@ class PowerPoster(Thread):
             self.log.debug("[%s]: data aggregator answer is:", self.name)
             self.log.debug("[%s]: %s", self.name, response.text)
         except Exception:  # pylint: disable=locally-disabled,broad-except
-            self.log.error(
+            self.log.exception(
                 "[%s]: Error while sendind data to data aggregator",
                 self.name
             )
@@ -207,7 +207,7 @@ class SensorsPoster(Thread):
                             *self._on_send_ok["args"]
                         )
         except Exception:  # pylint: disable=locally-disabled,broad-except
-            self.log.error(
+            self.log.exception(
                 "[%s]: Error while sendind data to data aggregator",
                 self.name
             )

@@ -42,6 +42,7 @@
 """Collect power data with CSV via FTP."""
 import datetime
 import logging
+import os
 import re
 import time
 from ftplib import FTP
@@ -150,27 +151,49 @@ class CSVFTPCollector(SensorsCollector):
 
         return res
 
+    def _load_data_from_ftp_file(self, filename, ftp_client):
+        """Load data from file on ftp server in an array."""
+
+        data = []
+        try:
+            tmp_filename = '/tmp/' + str(time.time()) + '_' + filename
+            fout = open(tmp_filename, 'wb')
+            ftp_client.retrbinary('RETR ' + filename, fout.write)
+            fout.close()
+            fin = open(tmp_filename, "rb")
+            for line in fin:
+                data.append(line)
+            fin.close()
+            os.remove(tmp_filename)
+        finally:
+            self.log.debug("[%s] File loaded", self.name)
+        return data
+
+    def _get_decoded_line(self, line):
+        """Get line from CSV data file as decoded string."""
+        return line.decode(
+            self.server_conf["encoding"]
+        ).replace(
+            "\r\n",
+            "\n"
+        ).split("\n")[0]
+
     def _get_file_data(self, filename, ftp_client):
         """Get data from filename."""
 
         data = []
         res = []
 
-        ftp_client.retrbinary('RETR ' + filename, data.append)
+        data = self._load_data_from_ftp_file(filename, ftp_client)
         if data == []:
             return res
 
-        data = data[0].decode(
-            self.server_conf["encoding"]
-        ).replace(
-            "\r\n",
-            "\n"
-        ).split("\n")
+        hdr_line = self._get_decoded_line(data[0])
 
-        headers = self._get_headers_def(data[0])
+        headers = self._get_headers_def(hdr_line)
         data.pop(0)
 
-        self.log.debug(
+        self.log.info(
             "[%s]: Getting data from file %s",
             self.name,
             filename
@@ -178,6 +201,7 @@ class CSVFTPCollector(SensorsCollector):
 
         for line in data:
             if line != "":
+                line = self._get_decoded_line(line)
                 try:
                     cols = line.split(',')
                     if "tz" in self.server_conf:
@@ -214,7 +238,7 @@ class CSVFTPCollector(SensorsCollector):
 
     def _get_ftp_connection(self):
         """Connect to FTP server and switch to data collect directory."""
-        ftp_client = FTP(self.server_conf["host"], timeout=1)
+        ftp_client = FTP(self.server_conf["host"], timeout=20)
 
         ftp_client.login(
             self.server_conf["user"],
@@ -236,22 +260,30 @@ class CSVFTPCollector(SensorsCollector):
         result = []
         ftp_client = self._get_ftp_connection()
 
-        files = []
-        for filename in ftp_client.nlst(self.server_conf["file_filter"]):
-            result += self._get_file_data(filename, ftp_client)
-            files.append(filename)
+        try:
+            files = []
+            for filename in ftp_client.nlst(self.server_conf["file_filter"]):
+                result += self._get_file_data(filename, ftp_client)
+                files.append(filename)
 
-            if "max_files" in self.server_conf and \
-               len(files) > self.server_conf["max_files"]:
-                self.log.warning(
-                    "File count exceed %d: breaking",
-                    self.server_conf["max_files"]
-                )
-                break
-
+                if "max_files" in self.server_conf and \
+                   len(files) >= self.server_conf["max_files"]:
+                    self.log.warning(
+                        "[%s] File count exceed %d: breaking",
+                        self.name,
+                        self.server_conf["max_files"]
+                    )
+                    break
+        finally:
+            ftp_client.close()
         self.on_send_ok(self.remove_files, files)
+        self.log.info(
+            "[%s] Got %d data from %d files: ready to send",
+            self.name,
+            len(result),
+            len(files)
+        )
 
-        ftp_client.close()
         return result
 
     def remove_files(self, files):
@@ -261,12 +293,14 @@ class CSVFTPCollector(SensorsCollector):
            "purge" in self.server_conf and\
            self.server_conf["purge"]:
 
-            self.log.debug("[%s] Removing %s", self.name, files)
+            self.log.info("[%s] Removing %s", self.name, files)
             ftp_client = self._get_ftp_connection()
 
-            for filename in files:
-                ftp_client.delete(filename)
-            ftp_client.close()
+            try:
+                for filename in files:
+                    ftp_client.delete(filename)
+            finally:
+                ftp_client.close()
 
 
 def main():
@@ -277,9 +311,9 @@ def main():
         "host": "localhost",
         "user": "foo",
         "pass": "bar",
-        "root_dir": "/home/foo/ftpdir/csv_datataker",
+        "root_dir": "/home/foo/ftpdir/brian",
         "purge": False,
-        "file_filter": "*CSV",
+        "file_filter": "*csv",
         "encoding": "utf8"
     }
 
