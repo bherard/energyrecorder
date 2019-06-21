@@ -115,7 +115,7 @@ class CSVFTPCollector(SensorsCollector):
         elif re.match(r"^[A-Z|a-z]*/[A-Z|a-z]*", str_tz):
             # TZ is full name like Europe/Paris
 
-            # Get timezone offet from UTC (wverify_certith DST) form 
+            # Get timezone offet from UTC (wverify_certith DST) form
             # date and TZ name
             data_dt = datetime.datetime.strptime(
                 str_datetime,
@@ -154,6 +154,11 @@ class CSVFTPCollector(SensorsCollector):
     def _load_data_from_ftp_file(self, filename, ftp_client):
         """Load data from file on ftp server in an array."""
 
+        self.log.debug(
+            "[%s]: Getting data from file %s",
+            self.name,
+            filename
+        )
         data = []
         try:
             tmp_filename = '/tmp/' + str(time.time()) + '_' + filename
@@ -164,9 +169,19 @@ class CSVFTPCollector(SensorsCollector):
             for line in fin:
                 data.append(line)
             fin.close()
-            os.remove(tmp_filename)
-        finally:
-            self.log.debug("[%s] File loaded", self.name)
+        except Exception:  # pylint: disable=broad-except
+            self.log.exception(
+                "[%s] Error while getting data from %s",
+                self.name,
+                filename
+            )
+        os.remove(tmp_filename)
+        self.log.debug(
+            "[%s]: Data loaded from file %s",
+            self.name,
+            filename
+        )
+
         return data
 
     def _get_decoded_line(self, line):
@@ -184,6 +199,11 @@ class CSVFTPCollector(SensorsCollector):
         data = []
         res = []
 
+        self.log.info(
+            "[%s]: Ready to process file %s",
+            self.name,
+            filename
+        )
         data = self._load_data_from_ftp_file(filename, ftp_client)
         if data == []:
             return res
@@ -192,12 +212,6 @@ class CSVFTPCollector(SensorsCollector):
 
         headers = self._get_headers_def(hdr_line)
         data.pop(0)
-
-        self.log.info(
-            "[%s]: Getting data from file %s",
-            self.name,
-            filename
-        )
 
         for line in data:
             if line != "":
@@ -238,6 +252,7 @@ class CSVFTPCollector(SensorsCollector):
 
     def _get_ftp_connection(self):
         """Connect to FTP server and switch to data collect directory."""
+
         ftp_client = FTP(self.server_conf["host"], timeout=20)
 
         ftp_client.login(
@@ -260,8 +275,8 @@ class CSVFTPCollector(SensorsCollector):
         result = []
         ftp_client = self._get_ftp_connection()
 
+        files = []
         try:
-            files = []
             for filename in ftp_client.nlst(self.server_conf["file_filter"]):
                 result += self._get_file_data(filename, ftp_client)
                 files.append(filename)
@@ -274,9 +289,9 @@ class CSVFTPCollector(SensorsCollector):
                         self.server_conf["max_files"]
                     )
                     break
+            self.on_send_ok(self.remove_files, files)
         finally:
             ftp_client.close()
-        self.on_send_ok(self.remove_files, files)
         self.log.info(
             "[%s] Got %d data from %d files: ready to send",
             self.name,
@@ -294,11 +309,22 @@ class CSVFTPCollector(SensorsCollector):
            self.server_conf["purge"]:
 
             self.log.info("[%s] Removing %s", self.name, files)
-            ftp_client = self._get_ftp_connection()
-
             try:
+                ftp_client = self._get_ftp_connection()
+
                 for filename in files:
+                    self.log.debug(
+                        "[%s] DELE %s",
+                        self.name,
+                        filename
+                    )
                     ftp_client.delete(filename)
+            except Exception as exc:  # pylint: disable=broad-except
+                self.log.warning(
+                    "[%s] Error while deleteing file from FTP server (%s)",
+                    self.name,
+                    exc
+                )
             finally:
                 ftp_client.close()
 

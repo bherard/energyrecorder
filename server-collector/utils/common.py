@@ -26,8 +26,6 @@
 
 from threading import Thread
 import logging.config
-import traceback
-import sys
 import json
 import urllib
 import requests
@@ -82,7 +80,7 @@ class PowerPoster(Thread):
                 )
             else:
                 auth = None
-            
+
             if "verify_cert" in self.data_server:
                 verify_cert = self.data_server["verify_cert"]
             else:
@@ -112,12 +110,10 @@ class PowerPoster(Thread):
                 "[%s]: Error while sendind data to data aggregator",
                 self.name
             )
-            traceback.print_exc(file=sys.stdout)
 
 
 class SensorsPoster(Thread):
     """Post sensors data to recorder API."""
-    _on_send_ok = {}
 
     def __init__(self,
                  data,
@@ -148,6 +144,7 @@ class SensorsPoster(Thread):
         Thread.__init__(self)
         self.data = data
         self.data_server = data_server
+        self._on_send_ok = {}
 
     def on_send_ok(self, func, *args):
         """
@@ -211,4 +208,3 @@ class SensorsPoster(Thread):
                 "[%s]: Error while sendind data to data aggregator",
                 self.name
             )
-            traceback.print_exc(file=sys.stdout)

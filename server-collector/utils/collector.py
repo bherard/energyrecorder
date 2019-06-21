@@ -154,6 +154,9 @@ class Collector(Thread):
             self.condition.acquire()
             self.condition.wait()
             self.condition.release()
+            # Ensure previously posted data are send
+            if self.data_poster is not None:
+                self.data_poster.join()
 
             # Running status may have changed while waitting
             if self.running:
@@ -190,10 +193,6 @@ class Collector(Thread):
                             data
                         )
 
-                        # Ensure previously posted data are send
-                        if self.data_poster is not None:
-                            self.data_poster.join()
-
                         self.data_poster = SensorsPoster(
                             data,
                             self.data_server_conf
@@ -227,7 +226,6 @@ class SensorsCollector(Thread):
     """Collect Sensors value collect/publish root class."""
 
     type = "to-be-overloaded-at-implem"
-    _on_send_ok = {}
 
     # Should be replaced by daemon condition at implem class creation
     condition = threading.Condition()
@@ -277,6 +275,7 @@ class SensorsCollector(Thread):
         self.log = logging.getLogger(__name__)
 
         self.data_poster = None
+        self._on_send_ok = {}
 
     def stop(self):
         """
@@ -343,6 +342,9 @@ class SensorsCollector(Thread):
             self.condition.acquire()
             self.condition.wait()
             self.condition.release()
+            # Ensure previously posted data are send
+            if self.data_poster is not None:
+                self.data_poster.join()
 
             # Running status may have changed while waitting
             if self.running:
@@ -377,10 +379,6 @@ class SensorsCollector(Thread):
                             self.name,
                             data
                         )
-
-                        # Ensure previously posted data are send
-                        if self.data_poster is not None:
-                            self.data_poster.join()
 
                         self.data_poster = SensorsPoster(
                             data,
