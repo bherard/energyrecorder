@@ -393,6 +393,10 @@ class SensorsCollector(Thread):
                         self.data_poster.name = self.name + "/DataPoster"
                         self.data_poster.start()
                     else:
+                        if "func" in self._on_send_ok:
+                            self._on_send_ok["func"](
+                                *self._on_send_ok["args"]
+                            )
                         self.log.info(
                             "[%s]: Didn't got any measurement from equipement",
                             self.name,
