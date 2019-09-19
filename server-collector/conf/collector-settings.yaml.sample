@@ -119,7 +119,7 @@ PODS:
     # default purge: False remove file from FTP server when data are send
     # purge: True
     # Optional, overide TZ for CSV (or host TZ if no TZ in CSV) with a 
-    # specific TZ  Ex:. Europe/Paris
+    # specific TZ  Ex:. Europe/Paris, +02:00, UTC
     # tz: Europe/Paris
     # Optional: Maximum number of file to proceed in 1 step/collect
     # Note: if maximum is reached and if old files are not purged, newer files

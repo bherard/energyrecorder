@@ -112,7 +112,7 @@ class CSVFTPCollector(SensorsCollector):
             # whitch is TZ format supported by python "%z" date formatter)
             str_tz = str_tz.replace(":", "").replace("Z", "+0000")
             fmt = "%Y/%m/%d %H:%M:%S.%f%z"
-        elif re.match(r"^[A-Z|a-z]*/[A-Z|a-z]*", str_tz):
+        elif re.match(r"^[A-Z|a-z]*/[A-Z|a-z]*", str_tz) or str_tz == "UTC":
             # TZ is full name like Europe/Paris
 
             # Get timezone offet from UTC (wverify_certith DST) form
@@ -339,8 +339,9 @@ def main():
         "pass": "bar",
         "root_dir": "/home/foo/ftpdir/brian",
         "purge": False,
-        "file_filter": "*csv",
-        "encoding": "utf8"
+        "file_filter": "*CSV",
+        "encoding": "utf8", 
+        "tz": "+00:00"
     }
 
     the_collector = CSVFTPCollector(
