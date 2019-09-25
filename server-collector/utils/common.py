@@ -86,6 +86,11 @@ class PowerPoster(Thread):
             else:
                 verify_cert = True
 
+            if "timeout" in self.data_server:
+                timeout = self.data_server["timeout"]
+            else:
+                timeout = 10
+
             api_uri = self.data_server["base_url"] + "/resources/servers/"
             api_uri += urllib.parse.quote(self.data["sender"])
             self.log.info("[%s]: %s", self.name, api_uri)
@@ -96,7 +101,8 @@ class PowerPoster(Thread):
                 headers={
                     'content-type': 'application/json'
                 },
-                verify=verify_cert
+                verify=verify_cert,
+                timeout=timeout
             )
 
             self.log.debug(
@@ -176,6 +182,11 @@ class SensorsPoster(Thread):
             else:
                 verify_cert = True
 
+            if "timeout" in self.data_server:
+                timeout = self.data_server["timeout"]
+            else:
+                timeout = 10
+
             api_uri = self.data_server["base_url"] + "/resources/equipments/"
             api_uri += urllib.parse.quote(self.data["sender"])
             api_uri += "/measurements"
@@ -187,7 +198,8 @@ class SensorsPoster(Thread):
                 headers={
                     'content-type': 'application/json'
                 },
-                verify=verify_cert
+                verify=verify_cert,
+                timeout=timeout
             )
 
             self.log.debug(

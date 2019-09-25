@@ -145,7 +145,7 @@ PODS:
         # lowest weight WORD at left
         #register_order: left
     active: True
-    # Collect data dataged as dynamic
+    # Collect data taged as dynamic
     # from rpimonitor https://github.com/XavierBerger/RPi-Monitor 
   - host: server-ip-or-name[:port]
     id: server-id
@@ -153,9 +153,11 @@ PODS:
     active: False
 
 RECORDER_API_SERVER:
-  base_url: http://energy.opnfv.fr
+  base_url: https://recordingapi.myserver.com
   pass: ''
   user: ''
   # Uncomment following line to bypass SSL certifcate check (NOT RECOMMANDED)
-  #verify_cert: True
+  # verify_cert: True
+  # Uncomment the following line to overide default timeout (2s) to send data
+  # timeout: 5
 
