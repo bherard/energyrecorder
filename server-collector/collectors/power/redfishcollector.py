@@ -28,17 +28,18 @@
 
 import time
 import json
+import logging
 import sys
 import traceback
 import requests
 
-from utils.collector import Collector
+from utils.collector import SensorsCollector
 
 
 requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
 
 
-class RedfishCollector(Collector):
+class RedfishCollector(SensorsCollector):
     """Collect power consumption via HP Redfish rest/redfish API."""
 
     _chassis_list = None
@@ -181,8 +182,15 @@ class RedfishCollector(Collector):
 
         self._chassis_list = self.load_chassis_list()
 
-    def get_power(self):
+    def get_sensors(self):
         """Get Box power."""
+
+        if not self._chassis_list:
+            # Ensure chassis list is loaded
+            running = self.running
+            self.running = True
+            self.pre_run()
+            self.running = running
 
         power = 0
         for chassis in self._chassis_list['Members']:
@@ -212,4 +220,28 @@ class RedfishCollector(Collector):
                 )
                 return 0
 
-        return power
+        return [self.generate_sensor_data("power", "W", power)]
+
+
+def main():
+    """Execute basic test."""
+    logging.basicConfig(level=logging.DEBUG)
+
+    redfish_server_conf = {
+        "base_url": "https://127.0.0.1:7443",
+        "user": "opnfv",
+        "pass": "opnfv2018"
+    }
+
+    the_collector = RedfishCollector(
+        "ENV",
+        "SRV",
+        redfish_server_conf,
+        "https://recordingapi.myserver.com"
+    )
+
+    the_collector.log.info(the_collector.get_sensors())
+
+
+if __name__ == "__main__":
+    main()

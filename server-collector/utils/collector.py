@@ -291,6 +291,17 @@ class SensorsCollector(Thread):
         self.running = False
         self.ready = False
 
+    def generate_sensor_data(self, sensor, unit, value, timestamp=None):
+        """Generate a dict to add to get_sensors result."""
+        res = {
+            "sensor": sensor,
+            "unit": unit,
+            "value": value
+        }
+        if timestamp:
+            res["time"] = timestamp
+        return res
+
     def get_sensors(self):
         """Get sensors values from equipement (to be implemented)."""
         raise Exception("get_sensors must be implmented")

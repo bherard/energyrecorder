@@ -228,14 +228,13 @@ class CSVFTPCollector(SensorsCollector):
                     i = 0
                     while i < len(cols):
                         try:
-                            res.append(
-                                {
-                                    "sensor": headers[i]["sensor"],
-                                    "unit": headers[i]["unit"],
-                                    "value": float(cols[i]),
-                                    "time": timestamp
-                                }
+                            item = self.generate_sensor_data(
+                                headers[i]["sensor"],
+                                headers[i]["unit"],
+                                float(cols[i]),
+                                timestamp
                             )
+                            res.append(item)
                         except ValueError:
                             self.log.debug(
                                 "'%s' is not a valid value", cols[i]
