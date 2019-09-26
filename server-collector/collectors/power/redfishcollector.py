@@ -171,7 +171,10 @@ class RedfishCollector(SensorsCollector):
                                 verify=False)
         power_metrics = json.loads(response.text)
 
-        return power_metrics["PowerControl"][0]["PowerConsumedWatts"]
+        chassis_power = 0
+        for pwr in power_metrics["PowerControl"]:
+            chassis_power += pwr["PowerConsumedWatts"]
+        return chassis_power
 
     def pre_run(self):
         """Load chassis list and initialiaze collector."""
@@ -219,8 +222,9 @@ class RedfishCollector(SensorsCollector):
                     self.name, err_text
                 )
                 return 0
-
-        return [self.generate_sensor_data("power", "W", power)]
+        res = []
+        res.append(self.generate_sensor_data("power", "W", power))
+        return res
 
 
 def main():
@@ -240,7 +244,7 @@ def main():
         "https://recordingapi.myserver.com"
     )
 
-    the_collector.log.info(the_collector.get_sensors())
+    logging.debug(the_collector.get_sensors())
 
 
 if __name__ == "__main__":
