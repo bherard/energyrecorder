@@ -37,6 +37,7 @@ import yaml
 
 from collectors.csvftpcollector import CSVFTPCollector
 from collectors.modbuscollector import ModBUSCollector
+from collectors.redfishcollector import RedfishCollector
 from collectors.rpimonitorcollector import RPIMONCollector
 from collectors.power.ibmc_gui_collector import IBMCGUICollector
 from collectors.power.idrac8_gui_collector import IDRAC8GUICollector
@@ -44,7 +45,6 @@ from collectors.power.ilo_gui_collector import ILOGUICollector
 from collectors.power.ilocollector import ILOCollector
 from collectors.power.intel_gui_collector import INTELGUICollector
 from collectors.power.ipmicollector import IPMICollector
-from collectors.power.redfishcollector import RedfishCollector
 
 # Create a list of active pollers
 POLLERS = []
@@ -240,7 +240,7 @@ def get_collector(server, pod, config):
             server_conf["temperature"] = server["temperature"]
         if "power" in server:
             server_conf["power"] = server["power"]
-            
+
         the_collector = RedfishCollector(
             pod["environment"],
             server["id"],
@@ -283,11 +283,11 @@ def get_collector(server, pod, config):
             ftp_server_conf["file_filter"] = server["file_filter"]
         if "encoding" in server:
             ftp_server_conf["encoding"] = server["encoding"]
-        if "tz" in server: 
+        if "tz" in server:
             ftp_server_conf["tz"] = server["tz"]
-        if "max_files" in server: 
+        if "max_files" in server:
             ftp_server_conf["max_files"] = server["max_files"]
-        if "purge" in server: 
+        if "purge" in server:
             ftp_server_conf["purge"] = server["purge"]
 
         the_collector = CSVFTPCollector(

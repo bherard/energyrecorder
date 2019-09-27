@@ -73,6 +73,10 @@ PODS:
     pass: redfish-user-password
     # Following parameter is optional (default is True)
     # active: False|True 
+    # Following parameter is optional (default is True): get power
+    # power: False|True 
+    # Following parameter is optional (default is True) get temperature sensors
+    # temperatures: False|True 
 
     #Generic IPMI (see ipmicollector.py to see supported hardware)
   - host: server-ip-or-name[:bidged-address] # ex 192.168.0.1 or if bidging required 192.168.0.1:0x82

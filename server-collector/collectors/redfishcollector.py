@@ -14,7 +14,8 @@
 # File Name   : RedfishCollector.py
 #
 # Created     : 2017-02
-# Authors     : Benoit HERARD <benoit.herard(at)orange.com>
+# Authors     : Benoit HERARD <benoit.herard(at)orange.com>,
+#               Bertrand Le Lamer <bertrand.lelamer(at)orange.com>
 #
 # Description :
 #     Daemon implementation
@@ -22,6 +23,7 @@
 # History     :
 # 1.0.0 - 2017-02-20 : Release of the file
 # 1.1.0 - 2018-10-26 : Add feature to synchronize polling of different threads
+# 2.0.0 - 2019-09-26 : Add temperature sensorsreading
 #
 
 """Collect power comsumption via redfish API."""
@@ -50,10 +52,9 @@ class RedfishCollector(SensorsCollector):
             environment, server_id, server_conf, data_server_conf
         )
         if "temperature" not in self.server_conf:
-            self.server_conf["temperature"] = False
+            self.server_conf["temperature"] = True
         if "power" not in self.server_conf:
             self.server_conf["power"] = True
-
 
     def _is_https(self,):
         """Try to determine if host is using https or not."""
@@ -158,7 +159,7 @@ class RedfishCollector(SensorsCollector):
                             self.name,
                             chassis["@odata.id"],
                             chassis["HavePower"]
-                        )                        
+                        )
 
             except Exception:  # pylint: disable=locally-disabled,broad-except
                 self.log.error(
@@ -195,9 +196,9 @@ class RedfishCollector(SensorsCollector):
         chassis_power = 0
         for pwr in power_metrics["PowerControl"]:
             chassis_power += pwr["PowerConsumedWatts"]
-        return chassis_power 
+        return chassis_power
 
-    def get_chassis_thermal(self, chassis_uri, chassis_Id):
+    def get_chassis_thermal(self, chassis_uri, chassis_id):
         """Get ThermalMetter values form Redfish API."""
         result = []
         if chassis_uri[-1:] != '/':
@@ -218,7 +219,7 @@ class RedfishCollector(SensorsCollector):
         for thermal in thermal_metrics["Temperatures"]:
             if thermal["Status"]["State"] == "Enabled":
                 temp = self.generate_sensor_data(
-                    chassis_Id + "/" + thermal["Name"],
+                    chassis_id + "/" + thermal["Name"],
                     "Celsius",
                     thermal["ReadingCelsius"]
                 )
@@ -250,7 +251,9 @@ class RedfishCollector(SensorsCollector):
 
             try:
                 if chassis["HaveThermal"] and self.server_conf["temperature"]:
-                    thermal += self.get_chassis_thermal(chassis["@odata.id"], chassis["Id"])
+                    thermal += self.get_chassis_thermal(
+                        chassis["@odata.id"], chassis["Id"]
+                    )
                 if chassis["HavePower"] and self.server_conf["power"]:
                     power += self.get_chassis_power(chassis["@odata.id"])
 
