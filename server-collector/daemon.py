@@ -236,6 +236,11 @@ def get_collector(server, pod, config):
             "user": server["user"],
             "pass": server["pass"]
         }
+        if "temperature" in server:
+            server_conf["temperature"] = server["temperature"]
+        if "power" in server:
+            server_conf["power"] = server["power"]
+            
         the_collector = RedfishCollector(
             pod["environment"],
             server["id"],

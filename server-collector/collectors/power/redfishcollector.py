@@ -45,6 +45,16 @@ class RedfishCollector(SensorsCollector):
     _chassis_list = None
     type = "redfish"
 
+    def __init__(self, environment, server_id, server_conf, data_server_conf):
+        super().__init__(
+            environment, server_id, server_conf, data_server_conf
+        )
+        if "temperature" not in self.server_conf:
+            self.server_conf["temperature"] = False
+        if "power" not in self.server_conf:
+            self.server_conf["power"] = True
+
+
     def _is_https(self,):
         """Try to determine if host is using https or not."""
 
@@ -128,6 +138,17 @@ class RedfishCollector(SensorsCollector):
                         chassis_def = self.get_chassis_def(
                             chassis["@odata.id"]
                         )
+                        chassis["Id"] = chassis_def["Id"]
+                        if "Thermal" in chassis_def:
+                            chassis["HaveThermal"] = True
+                        else:
+                            chassis["HaveThermal"] = False
+                        self.log.debug(
+                            "[%s]: chassis %s has Thermal data: %s",
+                            self.name,
+                            chassis["@odata.id"],
+                            chassis["HaveThermal"]
+                        )
                         if "Power" in chassis_def:
                             chassis["HavePower"] = True
                         else:
@@ -137,7 +158,7 @@ class RedfishCollector(SensorsCollector):
                             self.name,
                             chassis["@odata.id"],
                             chassis["HavePower"]
-                        )
+                        )                        
 
             except Exception:  # pylint: disable=locally-disabled,broad-except
                 self.log.error(
@@ -174,7 +195,35 @@ class RedfishCollector(SensorsCollector):
         chassis_power = 0
         for pwr in power_metrics["PowerControl"]:
             chassis_power += pwr["PowerConsumedWatts"]
-        return chassis_power
+        return chassis_power 
+
+    def get_chassis_thermal(self, chassis_uri, chassis_Id):
+        """Get ThermalMetter values form Redfish API."""
+        result = []
+        if chassis_uri[-1:] != '/':
+            chassis_uri += '/'
+        rqt_url = self.server_conf["base_url"]
+        rqt_url += chassis_uri
+        rqt_url += "Thermal/"
+        self.log.debug(
+            "[%s]: Thermal at %s",
+            self.name,
+            rqt_url
+        )
+        response = requests.get(rqt_url,
+                                auth=self.pod_auth,
+                                verify=False)
+        thermal_metrics = json.loads(response.text)
+
+        for thermal in thermal_metrics["Temperatures"]:
+            if thermal["Status"]["State"] == "Enabled":
+                temp = self.generate_sensor_data(
+                    chassis_Id + "/" + thermal["Name"],
+                    "Celsius",
+                    thermal["ReadingCelsius"]
+                )
+                result.append(temp)
+        return result
 
     def pre_run(self):
         """Load chassis list and initialiaze collector."""
@@ -196,10 +245,13 @@ class RedfishCollector(SensorsCollector):
             self.running = running
 
         power = 0
+        thermal = []
         for chassis in self._chassis_list['Members']:
 
             try:
-                if chassis["HavePower"]:
+                if chassis["HaveThermal"] and self.server_conf["temperature"]:
+                    thermal += self.get_chassis_thermal(chassis["@odata.id"], chassis["Id"])
+                if chassis["HavePower"] and self.server_conf["power"]:
                     power += self.get_chassis_power(chassis["@odata.id"])
 
             except Exception:  # pylint: disable=broad-except
@@ -222,9 +274,9 @@ class RedfishCollector(SensorsCollector):
                     self.name, err_text
                 )
                 return 0
-        res = []
-        res.append(self.generate_sensor_data("power", "W", power))
-        return res
+        pwr = []
+        pwr.append(self.generate_sensor_data("power", "W", power))
+        return pwr + thermal
 
 
 def main():
@@ -232,9 +284,11 @@ def main():
     logging.basicConfig(level=logging.DEBUG)
 
     redfish_server_conf = {
-        "base_url": "https://127.0.0.1:7443",
+        "base_url": "https://127.0.0.1:2222",
         "user": "opnfv",
-        "pass": "opnfv2018"
+        "pass": "opnfv2018",
+        "power": True,
+        "temperature": True
     }
 
     the_collector = RedfishCollector(
