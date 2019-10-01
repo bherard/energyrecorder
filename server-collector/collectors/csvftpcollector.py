@@ -66,6 +66,7 @@ class CSVFTPCollector(SensorsCollector):
             self.server_conf["file_filter"] = "*"
         if "encoding" not in self.server_conf:
             self.server_conf["encoding"] = "utf8"
+        self._files = []
 
     def _get_headers_def(self, def_line):
         """Return a list of sensors definition from CVS cols. def line."""
@@ -276,7 +277,10 @@ class CSVFTPCollector(SensorsCollector):
 
         files = []
         try:
-            for filename in ftp_client.nlst(self.server_conf["file_filter"]):
+            # In order to limit cases where read files on FTP server
+            # occurs in the same time they are written on it
+            # this loop process files discovered at previous polling
+            for filename in self._files:
                 result += self._get_file_data(filename, ftp_client)
                 files.append(filename)
 
@@ -288,7 +292,19 @@ class CSVFTPCollector(SensorsCollector):
                         self.server_conf["max_files"]
                     )
                     break
+
+            # Notify "Mother" collector to remove processed files from
+            # FTP server if no error at processing level
+            # (i.e send is ok or empty data and if purge=True)
             self.on_send_ok(self.remove_files, files)
+
+            # # Load file list to process at next iteration
+            # self._files = []
+            # for filename in ftp_client.nlst(self.server_conf["file_filter"]):
+            #     # if file was not just processed
+            #     if filename not in files:
+            #         self._files.append(filename)
+
         finally:
             ftp_client.close()
         self.log.info(
@@ -303,13 +319,13 @@ class CSVFTPCollector(SensorsCollector):
     def remove_files(self, files):
         """Remove files from remote FTP server."""
 
-        if files != [] and \
-           "purge" in self.server_conf and\
-           self.server_conf["purge"]:
+        try:
+            ftp_client = self._get_ftp_connection()
+            if files != [] and \
+               "purge" in self.server_conf and\
+               self.server_conf["purge"]:
 
-            self.log.info("[%s] Removing %s", self.name, files)
-            try:
-                ftp_client = self._get_ftp_connection()
+                self.log.info("[%s] Removing %s", self.name, files)
 
                 for filename in files:
                     self.log.debug(
@@ -318,14 +334,15 @@ class CSVFTPCollector(SensorsCollector):
                         filename
                     )
                     ftp_client.delete(filename)
-            except Exception as exc:  # pylint: disable=broad-except
-                self.log.warning(
-                    "[%s] Error while deleteing file from FTP server (%s)",
-                    self.name,
-                    exc
-                )
-            finally:
-                ftp_client.close()
+        except Exception as exc:  # pylint: disable=broad-except
+            self.log.warning(
+                "[%s] Error while deleting file from FTP server (%s)",
+                self.name,
+                exc
+            )
+        finally:
+            self._files = ftp_client.nlst(self.server_conf["file_filter"])
+            ftp_client.close()
 
 
 def main():
@@ -339,7 +356,7 @@ def main():
         "root_dir": "/home/foo/ftpdir/brian",
         "purge": False,
         "file_filter": "*CSV",
-        "encoding": "utf8", 
+        "encoding": "utf8",
         "tz": "+00:00"
     }
 
@@ -350,6 +367,8 @@ def main():
         "http://foo.bar.net"
     )
 
+    # call it twice, once to load files list, once to collect them
+    the_collector.log.info(the_collector.get_sensors())
     the_collector.log.info(the_collector.get_sensors())
 
 
