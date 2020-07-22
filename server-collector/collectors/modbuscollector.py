@@ -32,7 +32,7 @@ class ModBUSCollector(SensorsCollector):
     """Collect power consumption ModBUS protocol."""
 
     type = "modbus"
-    modbus_client = None
+    modbus_client : ModbusClient = None
 
     def pre_run(self):
         """Initialize modbus client before starting."""
@@ -117,12 +117,27 @@ class ModBUSCollector(SensorsCollector):
 
         if self.modbus_client.open():
             for sensor in self.server_conf["sensors"]:
-                vals = self.modbus_client.read_holding_registers(
-                    sensor["register_address"],
-                    self._get_data_size(
-                        sensor["register_type"]
+                if "register_category" not in sensor:
+                    sensor["register_category"] = "holding"
+                if sensor["register_category"] == "holding":
+                    vals = self.modbus_client.read_holding_registers(
+                        sensor["register_address"],
+                        self._get_data_size(
+                            sensor["register_type"]
+                        )
                     )
-                )
+                elif sensor["register_category"] == "input":
+                    vals = self.modbus_client.read_input_registers(
+                        sensor["register_address"],
+                        self._get_data_size(
+                            sensor["register_type"]
+                        )
+                    )
+                else:
+                    self.log.error(
+                        "Unsupported register category: %s",
+                        sensor["register_category"]
+                    )
                 if "register_order" in sensor and\
                    sensor["register_order"] == "left":
                     vals = self._revert_list(vals)

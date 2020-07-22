@@ -136,6 +136,7 @@ PODS:
     sensors:
       - name: power
         unit: W
+        register_category: holding # default=holding, values=holding|input
         register_address: reg-number
         # Data type stored in register
         # MBI: signed 16b integer (ModBus Integer)

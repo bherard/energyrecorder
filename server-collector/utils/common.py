@@ -86,10 +86,11 @@ class PowerPoster(Thread):
             else:
                 verify_cert = True
 
+            connect_timeout = 10
+            read_timeout = 300
+
             if "timeout" in self.data_server:
-                timeout = self.data_server["timeout"]
-            else:
-                timeout = 10
+                read_timeout = self.data_server["timeout"]
 
             api_uri = self.data_server["base_url"] + "/resources/servers/"
             api_uri += urllib.parse.quote(self.data["sender"])
@@ -102,7 +103,7 @@ class PowerPoster(Thread):
                     'content-type': 'application/json'
                 },
                 verify=verify_cert,
-                timeout=timeout
+                timeout=(connect_timeout, read_timeout)
             )
 
             self.log.debug(
@@ -111,6 +112,13 @@ class PowerPoster(Thread):
             )
             self.log.debug("[%s]: data aggregator answer is:", self.name)
             self.log.debug("[%s]: %s", self.name, response.text)
+            if response.status_code == 200:
+                self.log.info(
+                    "[%s]: Message successfully forwarded "
+                    "to data aggregator':",
+                    self.name
+                )
+
         except Exception:  # pylint: disable=locally-disabled,broad-except
             self.log.exception(
                 "[%s]: Error while sendind data to data aggregator",
@@ -151,6 +159,7 @@ class SensorsPoster(Thread):
         self.data = data
         self.data_server = data_server
         self._on_send_ok = {}
+        self._chunk_len = 10000
 
     def on_send_ok(self, func, *args):
         """
@@ -182,39 +191,60 @@ class SensorsPoster(Thread):
             else:
                 verify_cert = True
 
+            connect_timeout = 10
+            read_timeout = 300
             if "timeout" in self.data_server:
-                timeout = self.data_server["timeout"]
-            else:
-                timeout = 10
+                read_timeout = self.data_server["timeout"]
 
             api_uri = self.data_server["base_url"] + "/resources/equipments/"
             api_uri += urllib.parse.quote(self.data["sender"])
             api_uri += "/measurements"
             self.log.info("[%s]: %s", self.name, api_uri)
-            response = requests.post(
-                api_uri,
-                data=json.dumps(payload),
-                auth=auth,
-                headers={
-                    'content-type': 'application/json'
-                },
-                verify=verify_cert,
-                timeout=timeout
-            )
 
-            self.log.debug(
-                '[%s]: Message forwarded to data aggregator',
+            chunk_payload = {
+                "environment": payload["environment"],
+                "time": payload["time"],
+                "measurements": []
+            }
+            item_idx = 0
+            while item_idx < len(payload["measurements"]):
+                chunk_data = []
+                while item_idx < len(payload["measurements"]) and \
+                        len(chunk_data) < self._chunk_len:
+                    chunk_data.append(payload["measurements"][item_idx])
+                    item_idx += 1
+                chunk_payload["measurements"] = chunk_data
+                response = requests.post(
+                    api_uri,
+                    data=json.dumps(chunk_payload),
+                    auth=auth,
+                    headers={
+                        'content-type': 'application/json'
+                    },
+                    verify=verify_cert,
+                    timeout=(connect_timeout, read_timeout)
+                )
+
+                self.log.debug(
+                    '[%s]: chunk forwarded to data aggregator',
+                    self.name
+                )
+                self.log.debug("[%s]: data aggregator answer is:", self.name)
+                self.log.debug("[%s]: %s", self.name, response.text)
+                if response.status_code != 200:
+                    raise Exception(response.text)
+
+            self.log.info(
+                "[%s]: Message successfully forwarded "
+                "to data aggregator':",
                 self.name
             )
-            self.log.debug("[%s]: data aggregator answer is:", self.name)
-            self.log.debug("[%s]: %s", self.name, response.text)
-            if response.status_code == 200:
-                jresp = json.loads(response.text)
-                if jresp["status"] == "OK":
-                    if "func" in self._on_send_ok:
-                        self._on_send_ok["func"](
-                            *self._on_send_ok["args"]
-                        )
+            jresp = json.loads(response.text)
+            if jresp["status"] == "OK":
+                if "func" in self._on_send_ok:
+                    self._on_send_ok["func"](
+                        *self._on_send_ok["args"]
+                    )
         except Exception:  # pylint: disable=locally-disabled,broad-except
             self.log.exception(
                 "[%s]: Error while sendind data to data aggregator",
