@@ -60,7 +60,7 @@ EOF
 
 
 function startNginx(){
-        sed -i 's/^\(.*client_max_body_size\).*/\1 20m;' /etc/nginx/nginx.conf
+        sed -i 's/^\(.*client_max_body_size\).*/\1 20m;/' /etc/nginx/nginx.conf
         cat <<EOF > /etc/nginx/conf.d/default.conf
 server {
         listen 80 default_server;
