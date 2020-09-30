@@ -32,7 +32,7 @@ class ModBUSCollector(SensorsCollector):
     """Collect power consumption ModBUS protocol."""
 
     type = "modbus"
-    modbus_client : ModbusClient = None
+    modbus_client = None
 
     def pre_run(self):
         """Initialize modbus client before starting."""
