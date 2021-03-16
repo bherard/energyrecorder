@@ -149,6 +149,8 @@ PODS:
         #register_order: right
         # lowest weight WORD at left
         #register_order: left
+        #Optional: Scal factor to apply to register value
+        register_scaling: 0.1 
     active: True
     # Collect data taged as dynamic
     # from rpimonitor https://github.com/XavierBerger/RPi-Monitor 

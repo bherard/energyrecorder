@@ -146,6 +146,8 @@ class ModBUSCollector(SensorsCollector):
                     vals,
                     sensor["register_type"]
                 )
+                if "register_scaling" in sensor:
+                    res_val *= sensor["register_scaling"]
                 result.append(
                     {
                         "sensor": sensor["name"],
