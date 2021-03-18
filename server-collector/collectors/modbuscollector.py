@@ -142,19 +142,22 @@ class ModBUSCollector(SensorsCollector):
                    sensor["register_order"] == "left":
                     vals = self._revert_list(vals)
 
-                res_val = self._convert_to_type(
-                    vals,
-                    sensor["register_type"]
-                )
-                if "register_scaling" in sensor:
-                    res_val *= sensor["register_scaling"]
-                result.append(
-                    {
-                        "sensor": sensor["name"],
-                        "unit": sensor["unit"],
-                        "value": res_val
-                    }
-                )
+                if not vals:
+                    self.log.error("Enable to get data for %s", sensor)
+                else:
+                    res_val = self._convert_to_type(
+                        vals,
+                        sensor["register_type"]
+                    )
+                    if "register_scaling" in sensor:
+                        res_val *= sensor["register_scaling"]
+                    result.append(
+                        {
+                            "sensor": sensor["name"],
+                            "unit": sensor["unit"],
+                            "value": res_val
+                        }
+                    )
 
             self.modbus_client.close()
         else:
