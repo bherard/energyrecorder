@@ -143,7 +143,11 @@ class ModBUSCollector(SensorsCollector):
                     vals = self._revert_list(vals)
 
                 if not vals:
-                    self.log.error("Enable to get data for %s", sensor)
+                    self.log.error(
+                        "[%s] Enable to get data for %s",
+                        self.name,
+                        sensor
+                    )
                 else:
                     res_val = self._convert_to_type(
                         vals,
