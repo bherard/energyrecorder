@@ -274,6 +274,16 @@ class CSVFTPCollector(SensorsCollector):
 
         result = []
         ftp_client = self._get_ftp_connection()
+        self._files = ftp_client.nlst(self.server_conf["file_filter"])
+        if self._files:
+            # Give time to end potential writting in progress in discovered files
+            self.log.debug(
+                "[%s] Found %s, waitting for writting to end",
+                self.name,
+                self._files
+            )
+
+            time.sleep(5)
 
         files = []
         try:
@@ -319,13 +329,13 @@ class CSVFTPCollector(SensorsCollector):
     def remove_files(self, files):
         """Remove files from remote FTP server."""
 
-        try:
-            ftp_client = self._get_ftp_connection()
-            if files != [] and \
-               "purge" in self.server_conf and\
-               self.server_conf["purge"]:
+        if files != [] and \
+            "purge" in self.server_conf and\
+            self.server_conf["purge"]:
 
-                self.log.info("[%s] Removing %s", self.name, files)
+            self.log.info("[%s] Removing %s", self.name, files)
+            try:
+                ftp_client = self._get_ftp_connection()
 
                 for filename in files:
                     self.log.debug(
@@ -334,15 +344,14 @@ class CSVFTPCollector(SensorsCollector):
                         filename
                     )
                     ftp_client.delete(filename)
-        except Exception as exc:  # pylint: disable=broad-except
-            self.log.warning(
-                "[%s] Error while deleting file from FTP server (%s)",
-                self.name,
-                exc
-            )
-        finally:
-            self._files = ftp_client.nlst(self.server_conf["file_filter"])
-            ftp_client.close()
+            except Exception as exc:  # pylint: disable=broad-except
+                self.log.exception(
+                    "[%s] Error while deleting file from FTP server (%s)",
+                    self.name,
+                    exc
+                )
+            finally:
+                ftp_client.close()
 
 
 def main():
