@@ -283,7 +283,7 @@ class CSVFTPCollector(SensorsCollector):
                 self._files
             )
 
-            time.sleep(5)
+            time.sleep(30)
 
         files = []
         try:
@@ -351,6 +351,9 @@ class CSVFTPCollector(SensorsCollector):
                     exc
                 )
             finally:
+            #     self._files = ftp_client.nlst(self.server_conf["file_filter"])
+            #     if self._files:
+            #         time.sleep(5)
                 ftp_client.close()
 
 
