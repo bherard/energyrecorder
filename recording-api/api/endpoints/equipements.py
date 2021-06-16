@@ -113,7 +113,7 @@ class EquipementMeasurements(Resource):
 
             if time is not None:
                 #Introduce aleat of 0..9999 mrico sec to avoid data mixup
-                sm_time = time + (random.randint(0, 9999)/1000000)
+                sm_time = time
                 sm_influx_data = sm_influx_data + " " + str(sm_time)
 
             if measurement["sensor"] == "power":
