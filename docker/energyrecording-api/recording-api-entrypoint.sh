@@ -98,6 +98,11 @@ function confApp(){
                 cp /usr/local/energyrecorder/recording-api/conf/webapp-settings.yaml.sample /usr/local/energyrecorder/recording-api/conf/webapp-settings.yaml
         fi
 }
+if [ "$5" == "proxy" -a "$6" != "" ] ; then
+        export http_proxy=$6
+        export https_proxy=$6
+        echo "proxy set to $6"
+fi
 
 confApp
 startInflux
