@@ -35,6 +35,8 @@ EOF
 }
 
 function startUwsgi(){
+        unset http_proxy
+        unset https_proxy
         cat <<EOF > /etc/uwsgi/conf.d/energyrecorder.ini
 [uwsgi]
 plugins = python3
@@ -60,6 +62,8 @@ EOF
 
 
 function startNginx(){
+        unset http_proxy
+        unset https_proxy
         sed -i 's/^\(.*client_max_body_size\).*/\1 20m;/' /etc/nginx/nginx.conf
         cat <<EOF > /etc/nginx/conf.d/default.conf
 server {
