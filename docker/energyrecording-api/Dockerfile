@@ -1,4 +1,4 @@
-FROM influxdb:alpine
+FROM influxdb:1.8.6-alpine
 LABEL maintainer="benoit.herard@orange.com"
 
 EXPOSE 80/tcp
