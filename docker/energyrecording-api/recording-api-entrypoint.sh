@@ -27,6 +27,7 @@ enabled = true
 auth-enabled = false
 https-enabled = false
 https-certificate = "/etc/ssl/influxdb.pem"
+flux-enabled = true
 EOF
         fi
         ps ax|grep influxd|grep -v grep|awk '{print $1}'|xargs kill -9
