@@ -1,9 +1,10 @@
-#!/bin/bash
+        #!/bin/bash
 # cd /usr/local/energyrecorder/recording-api/
 # export PYTHONPATH=.:$PYTHONPATH
 # python app.py &
 
 function startInflux(){
+        AUTH_ENABLED="false"
         influxd &
         sleep 1
         echo "show databases" | influx -username "$1" -password "$2"|grep NRG
@@ -11,7 +12,10 @@ function startInflux(){
                 curl https://raw.githubusercontent.com/bherard/energyrecorder/master/influx/creation.iql|influx
                 echo "CREATE USER $1 WITH PASSWORD '"$2"' WITH ALL PRIVILEGES"|influx
                 echo "CREATE USER $3 WITH PASSWORD '"$4"'"|influx
-                echo "GRANT READ ON NRG TO energyreader"|influx
+                echo "GRANT READ ON NRG TO $3"|influx
+                if [ "$1" != "" ] ; then
+                        AUTH_ENABLED="true"
+                fi
         else
                 echo "Database already exists"
         fi
@@ -24,7 +28,7 @@ function startInflux(){
 
 [http]
 enabled = true
-auth-enabled = false
+auth-enabled = $AUTH_ENABLED
 https-enabled = false
 https-certificate = "/etc/ssl/influxdb.pem"
 flux-enabled = true
@@ -109,8 +113,9 @@ if [ "$5" == "proxy" -a "$6" != "" ] ; then
         echo "proxy set to $6"
 fi
 
+echo "ARGS=$*"
 confApp
-startInflux
+startInflux "$1" "$2" "$3" "$4"
 startUwsgi
 startNginx
 
