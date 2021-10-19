@@ -1,0 +1,63 @@
+PODS:
+- environment: padlus_lab
+  # polling internval in seconds
+  polling_interval: 10
+  # Following parameter is optional (default is True)
+  # active: False|True
+  servers:
+  - host: 10.0.254.126
+    port: 161
+    username: "padus_clim"
+    auth_protocole: "SHA"
+    auth_secret: "padus_clim2021"
+    privacy_protocole: "AES"
+    privacy_secret: "padus_clim2021"
+    id: simulator
+    type: snmp
+    version: v3 # or v2 for snmpv2
+    community: "communitytest" # snmpv2 parameter
+    sensors:
+      - name: Temperature exterieure
+        oid: "1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5574"
+        unit: deg C
+      - name: Niveau ventilation
+        oid: "1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5077"
+        unit: deg C
+      - name: Puissance instantanee
+        oid: "1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5901"
+        unit: W
+      - name: Puissance froid
+        oid: "1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5491.1"
+        unit: W
+      - name: Eau glacee in
+        oid: "1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.6311.1"
+        unit: deg C
+      - name: Eau glacee out
+        oid: "1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.6312.1"
+        unit: deg C
+      - name: FC status
+        oid: "1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5302"
+        unit: A
+      - name: Free Cooling Valve Open Position
+        oid: "1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5379"
+        unit: B
+      - name: FC State
+        oid: "1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5383"
+        unit: C
+      - name: Consigne de temperature
+        oid: "1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5008"
+        unit: deg C
+      - name: Temperature retour air
+        oid: "1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.2.4291"
+        unit: deg C
+    active: True
+
+RECORDER_API_SERVER:
+  base_url: https://10.0.254.100
+  pass: gdm2018
+  user: serveur22
+  verify_cert: false
+  # Uncomment following line to bypass SSL certifcate check (NOT RECOMMANDED)
+  # verify_cert: True
+  # Uncomment the following line to overide default timeout (2s) to send data
+  # timeout: 5

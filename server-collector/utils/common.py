@@ -197,7 +197,8 @@ class SensorsPoster(Thread):
                 read_timeout = self.data_server["timeout"]
 
             api_uri = self.data_server["base_url"] + "/resources/equipments/"
-            api_uri += urllib.parse.quote(self.data["sender"])
+            # api_uri += urllib.parse.quote(self.data["sender"])
+            api_uri += self.data["sender"] # Fix sending to recorder
             api_uri += "/measurements"
             self.log.info("[%s]: %s", self.name, api_uri)
 

@@ -37,6 +37,7 @@ import yaml
 
 from collectors.csvftpcollector import CSVFTPCollector
 from collectors.modbuscollector import ModBUSCollector
+from collectors.snmpv3collector import SnmpV3Collector
 from collectors.redfishcollector import RedfishCollector
 from collectors.rpimonitorcollector import RPIMONCollector
 from collectors.power.ibmc_gui_collector import IBMCGUICollector
@@ -269,7 +270,29 @@ def get_collector(server, pod, config):
             pod["environment"],
             server["id"],
             server_conf,
-            config["RECORDER_API_SERVER"])
+            config["RECORDER_API_SERVER"]
+        )
+    elif server["type"] == SnmpV3Collector.type:
+        snmpv3_server_conf = {
+            "host": server["host"],
+            "port": server["port"],
+            "community": server["community"],
+            "type": server["type"],
+            "version": server["version"],
+            "sensors": server["sensors"],
+            "username": server["username"],
+            "auth_protocole": server["auth_protocole"],
+            "auth_secret": server["auth_secret"],
+            "privacy_protocole": server["privacy_protocole"],
+            "privacy_secret": server["privacy_secret"]
+        }
+
+        the_collector = SnmpV3Collector(
+            pod["environment"],
+            server["id"],
+            snmpv3_server_conf,
+            config["RECORDER_API_SERVER"]
+        )
     elif server["type"] == CSVFTPCollector.type:
         ftp_server_conf = {
             "host": server["host"],
@@ -319,7 +342,7 @@ def start_pollers():
     """Load conf, parse it, create pollers and collectors and start them."""
 
     # Load yaml conf file
-    with open("conf/collector-settings.yaml", 'r') as stream:
+    with open("conf/collector-settings-snmpv3-dev.yaml", 'r') as stream:
         try:
             config = yaml.safe_load(stream)
         except yaml.YAMLError:
@@ -396,7 +419,7 @@ def main():
     signal.signal(signal.SIGUSR1, signal_usr1_handler)
 
     # Configure logging
-    logging.config.fileConfig("conf/collector-logging.conf")
+    logging.config.fileConfig("conf/collector-logging-dev.conf")
 
     logging.info("Server power consumption daemon is starting")
 
