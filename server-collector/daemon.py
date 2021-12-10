@@ -37,6 +37,7 @@ import yaml
 
 from collectors.csvftpcollector import CSVFTPCollector
 from collectors.modbuscollector import ModBUSCollector
+from collectors.snmpv3collector import SnmpV3Collector
 from collectors.redfishcollector import RedfishCollector
 from collectors.rpimonitorcollector import RPIMONCollector
 from collectors.power.ibmc_gui_collector import IBMCGUICollector
@@ -270,6 +271,27 @@ def get_collector(server, pod, config):
             server["id"],
             server_conf,
             config["RECORDER_API_SERVER"])
+    elif server["type"] == SnmpV3Collector.type:
+        snmpv3_server_conf = {
+            "host": server["host"],
+            "port": server["port"],
+            "community": server["community"],
+            "type": server["type"],
+            "version": server["version"],
+            "sensors": server["sensors"],
+            "username": server["username"],
+            "auth_protocole": server["auth_protocole"],
+            "auth_secret": server["auth_secret"],
+            "privacy_protocole": server["privacy_protocole"],
+            "privacy_secret": server["privacy_secret"]
+        }
+
+        the_collector = SnmpV3Collector(
+            pod["environment"],
+            server["id"],
+            snmpv3_server_conf,
+            config["RECORDER_API_SERVER"]
+        )
     elif server["type"] == CSVFTPCollector.type:
         ftp_server_conf = {
             "host": server["host"],

@@ -159,6 +159,27 @@ PODS:
     type: rpimon
     active: False
 
+    #Collect data with SNMPv3
+  - host: server-ip-or-name
+    port: server-port (standard for snmpv3 is 161)
+    username: "user-name-to-connect"
+    auth_protocole: "SHA"
+    auth_secret: "auth-secret-to-connect"
+    privacy_protocole: "AES"
+    privacy_secret: "privacy-secret-to-connect"
+    id: simulator
+    type: snmp
+    version: v3 # or v2 for snmpv2
+    community: "snmp-community" # snmpv2 parameter
+    sensors:
+      - name: Sensor Name
+        oid: "snmp sensor ID (oid)"
+        unit: Sensor Unit
+      - name: Niveau ventilation
+        oid: "1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5077"
+        unit: deg C
+      etc, etc
+
 RECORDER_API_SERVER:
   base_url: https://recordingapi.myserver.com
   pass: ''
