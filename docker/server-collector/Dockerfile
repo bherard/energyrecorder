@@ -1,5 +1,5 @@
 FROM alpine
-MAINTAINER benoit.herard@orange.com
+LABEL maintainer="benoit.herard@orange.com"
 
 RUN apk update;\
     apk add git bash python3 py3-pip ipmitool libc-dev gcc; \

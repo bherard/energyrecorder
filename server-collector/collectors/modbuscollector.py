@@ -203,7 +203,7 @@ if __name__ == "__main__":
                 "register_category": "holding",
                 "register_address": 4096,
                 "register_type": "MBUL",
-                "register_scaling": 1,
+                "register_scaling": 0.1,
             }
         ]
     }
@@ -248,13 +248,3 @@ if __name__ == "__main__":
         s2_conf,
         "http://localhost:8080"    
     )
-
-
-    the_collector = ModBUSCollector(
-        "FOO",
-        "BAR",
-        s3_conf,
-        "http://localhost:8080"    
-    )
-    the_collector.pre_run()
-    print(the_collector.get_sensors())
