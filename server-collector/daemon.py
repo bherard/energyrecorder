@@ -263,6 +263,7 @@ def get_collector(server, pod, config):
     elif server["type"] == ModBUSCollector.type:
         server_conf = {
             "host": server["host"],
+            "framer": server["framer"],
             "sensors": server["sensors"],
         }
 
