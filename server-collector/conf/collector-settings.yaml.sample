@@ -133,13 +133,13 @@ PODS:
   - host: server-ip-or-name[:port]
     id: server-id
     type: modbus
-    # Optional: Framer to use to get data from ModBUS device (RTU|SOCKET)
-    # RTU: TCP Serial
-    # SOCKET: Regular TCP
-    # framer: RTU
+    #Optional framer to use to collect data on remote device (default for regular TCP is SOCKET, use RTU for TCP/Serial)
+    #framer: RTU
     sensors:
       - name: power
         unit: W
+        # Optional device unit when chainning ModBUS device (Serial)
+        #device_unit: 255
         register_category: holding # default=holding, values=holding|input
         register_address: reg-number
         # Data type stored in register
