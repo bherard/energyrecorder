@@ -24,7 +24,9 @@
 
 import struct
 
-from pyModbusTCP.client import ModbusClient
+from pymodbus.client.sync import ModbusTcpClient as ModbusClient
+from pymodbus.transaction import ModbusRtuFramer, ModbusSocketFramer
+
 from utils.collector import SensorsCollector
 
 
@@ -43,18 +45,25 @@ class ModBUSCollector(SensorsCollector):
         if len(tcp_settings) > 1:
             port = int(tcp_settings[1])
 
+        framer = ModbusSocketFramer
+        if "framer" in self.server_conf:
+            if self.server_conf["framer"] == "RTU":
+                framer = ModbusRtuFramer
+            elif self.server_conf["framer"] == "SOCKET":
+                framer=ModbusSocketFramer
         self.modbus_client = ModbusClient(
             host=host,
             port=port,
             auto_open=True,
-            auto_close=True
+            auto_close=True,
+            framer=framer
         )
 
     def _get_data_size(self, data_type):
         """Return registyer size accordind to data type."""
 
         ret = 1
-        if data_type in ["MBL", "MBF"]:
+        if data_type in ["MBL", "MBF", "MBUL"]:
             ret = 2
         else:
             ret = 1
@@ -100,6 +109,8 @@ class ModBUSCollector(SensorsCollector):
                 '>i',  # unpack as signed 32b int
                 struct.pack('>I', raw_val)  # Pack as unsigned 32b int
             )[0]
+        elif data_type == "MBUL":
+            ret = raw_val # red value is already unsigned 32b int
         elif data_type == "MBF":
             ret = struct.unpack(
                 '>f',  # Unpack as 32b float
@@ -115,7 +126,7 @@ class ModBUSCollector(SensorsCollector):
 
         result = []
 
-        if self.modbus_client.open():
+        if self.modbus_client.connect():
             for sensor in self.server_conf["sensors"]:
                 if "register_category" not in sensor:
                     sensor["register_category"] = "holding"
@@ -125,14 +136,14 @@ class ModBUSCollector(SensorsCollector):
                         self._get_data_size(
                             sensor["register_type"]
                         )
-                    )
+                    ).registers
                 elif sensor["register_category"] == "input":
                     vals = self.modbus_client.read_input_registers(
                         sensor["register_address"],
                         self._get_data_size(
                             sensor["register_type"]
                         )
-                    )
+                    ).registers
                 else:
                     self.log.error(
                         "Unsupported register category: %s",
@@ -144,7 +155,7 @@ class ModBUSCollector(SensorsCollector):
 
                 if not vals:
                     self.log.error(
-                        "[%s] Enable to get data for %s",
+                        "[%s] Unable to get data for %s",
                         self.name,
                         sensor
                     )
@@ -172,3 +183,78 @@ class ModBUSCollector(SensorsCollector):
             )
 
         return result
+
+
+if __name__ == "__main__":
+    import logging
+    FORMAT = ('%(asctime)-15s %(threadName)-15s'
+            ' %(levelname)-8s %(module)-15s:%(lineno)-8s %(message)s')
+    logging.basicConfig(format=FORMAT)
+    log = logging.getLogger()
+    log.setLevel(logging.DEBUG)
+
+    server_conf = {
+        "host": "10.0.254.124:502",
+        "framer": "RTU",
+        "sensors": [
+            {
+                "name": "holding",
+                "unit": "foo",
+                "register_category": "holding",
+                "register_address": 4096,
+                "register_type": "MBUL",
+                "register_scaling": 1,
+            }
+        ]
+    }
+
+    s2_conf = {
+        "host": "localhost:1502",
+        "sensors": [
+            {
+                "name": "holding",
+                "unit": "foo",
+                "register_category": "holding",
+                "register_address": 0,
+                "register_type": "MBU",
+                "register_scaling": 1,
+            },
+            {
+                "name": "input",
+                "unit": "foo",
+                "register_category": "input",
+                "register_address": 0,
+                "register_type": "MBU",
+                "register_scaling": 1,
+            }
+
+        ]
+    }
+
+
+    the_collector = ModBUSCollector(
+        "FOO",
+        "BAR",
+        server_conf,
+        "http://localhost:8080"    
+    )
+    the_collector.pre_run()
+    print(the_collector.get_sensors())
+    # print(the_collector._convert_to_type([1,0], "MBUL"))
+
+    the_collector = ModBUSCollector(
+        "FOO",
+        "BAR",
+        s2_conf,
+        "http://localhost:8080"    
+    )
+
+
+    the_collector = ModBUSCollector(
+        "FOO",
+        "BAR",
+        s3_conf,
+        "http://localhost:8080"    
+    )
+    the_collector.pre_run()
+    print(the_collector.get_sensors())

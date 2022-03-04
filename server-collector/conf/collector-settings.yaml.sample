@@ -133,6 +133,10 @@ PODS:
   - host: server-ip-or-name[:port]
     id: server-id
     type: modbus
+    # Optional: Framer to use to get data from ModBUS device (RTU|SOCKET)
+    # RTU: TCP Serial
+    # SOCKET: Regular TCP
+    # framer: RTU
     sensors:
       - name: power
         unit: W
