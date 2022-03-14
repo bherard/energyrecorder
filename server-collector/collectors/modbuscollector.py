@@ -40,7 +40,9 @@ class ModBUSCollector(SensorsCollector):
 
     def pre_run(self):
         """Initialize modbus client before starting."""
+        pass
 
+    def _create_modbus_client(self):
         port = 502
         tcp_settings = self.server_conf["host"].split(":")
         host = tcp_settings[0]
@@ -128,6 +130,7 @@ class ModBUSCollector(SensorsCollector):
 
         result = []
 
+        self._create_modbus_client()
         if self.modbus_client.connect():
             for sensor in self.server_conf["sensors"]:
                 if "register_category" not in sensor:
@@ -170,7 +173,7 @@ class ModBUSCollector(SensorsCollector):
                         sensor["register_category"]
                     )
                 if "register_order" in sensor and\
-                   sensor["register_order"] == "left":
+                sensor["register_order"] == "left":
                     vals = self._revert_list(vals)
 
                 if not vals:
@@ -193,8 +196,9 @@ class ModBUSCollector(SensorsCollector):
                             "value": res_val
                         }
                     )
-
             self.modbus_client.close()
+
+
         else:
             self.log.error(
                 "[%s]: Unable to get data from '%s'",
