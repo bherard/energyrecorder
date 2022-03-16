@@ -170,7 +170,7 @@ PODS:
     # Valid values are:
     # "NONE" -> No Authentication Protocol
     # "HMAC-MD5-96" -> The HMAC-MD5-96 Digest Authentication Protocol (:RFC:`3414#section-6`)
-    # "HMAC-SHA-96 (or "SHA") -> The HMAC-SHA-96 Digest Authentication Protocol AKA SHA-1 (:RFC:`3414#section-7`)
+    # "HMAC-SHA-96 (or "SHA", "SHA1", "SHA-1") -> The HMAC-SHA-96 Digest Authentication Protocol AKA SHA-1 (:RFC:`3414#section-7`)
     # "HMAC-SHA-2-128" -> The HMAC-SHA-2 Digest Authentication Protocols (:RFC:`7860`)
     # "HMAC-SHA-2-256" -> The HMAC-SHA-2 Digest Authentication Protocols (:RFC:`7860`)
     # "HMAC-SHA-2-384" -> The HMAC-SHA-2 Digest Authentication Protocols (:RFC:`7860`)

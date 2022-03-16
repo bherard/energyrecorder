@@ -24,7 +24,10 @@ class SnmpV3Collector(SensorsCollector):
         elif protocol_name == "HMAC-MD5-96":
             """The HMAC-MD5-96 Digest Authentication Protocol (:RFC:`3414#section-6`)"""
             res = usmHMACMD5AuthProtocol
-        elif protocol_name == "HMAC-SHA-96" or protocol_name == "SHA-1" or protocol_name == "SHA":
+        elif protocol_name == "HMAC-SHA-96" \
+                or protocol_name == "SHA-1" \
+                or protocol_name == "SHA1" \
+                or protocol_name == "SHA":
             """The HMAC-SHA-96 Digest Authentication Protocol AKA SHA-1 (:RFC:`3414#section-7`)"""
             res = usmHMACSHAAuthProtocol
         elif protocol_name == "HMAC-SHA-2-128":
