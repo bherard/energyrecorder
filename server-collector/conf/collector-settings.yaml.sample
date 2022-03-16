@@ -164,6 +164,29 @@ PODS:
     active: False
 
     #Collect data with SNMPv3
+    # -------------------------------------
+    # Note about Authentication protocols:
+    # -------------------------------------
+    # Valid values are:
+    # "NONE" -> No Authentication Protocol
+    # "HMAC-MD5-96" -> The HMAC-MD5-96 Digest Authentication Protocol (:RFC:`3414#section-6`)
+    # "HMAC-SHA-96 (or "SHA") -> The HMAC-SHA-96 Digest Authentication Protocol AKA SHA-1 (:RFC:`3414#section-7`)
+    # "HMAC-SHA-2-128" -> The HMAC-SHA-2 Digest Authentication Protocols (:RFC:`7860`)
+    # "HMAC-SHA-2-256" -> The HMAC-SHA-2 Digest Authentication Protocols (:RFC:`7860`)
+    # "HMAC-SHA-2-384" -> The HMAC-SHA-2 Digest Authentication Protocols (:RFC:`7860`)
+    # "HMAC-SHA-2-512" -> The HMAC-SHA-2 Digest Authentication Protocols (:RFC:`7860`)
+    # "NO-PRIVACY" -> No Privacy Protocol
+    # "CBC-DES" -> The CBC-DES Symmetric Encryption Protocol (:RFC:`3414#section-8`)
+    # "3DES-EDE" -> The 3DES-EDE Symmetric Encryption Protocol (`draft-reeder-snmpv3-usm-3desede-00 <https:://tools.ietf.org/html/draft-reeder-snmpv3-usm-3desede-00#section-5>`_)
+    # "CFB128-AES-128" (or "AES") -> The CFB128-AES-128 Symmetric Encryption Protocol (:RFC:`3826#section-3`)
+    # "CFB128-AES-192" -> The CFB128-AES-192 Symmetric Encryption Protocol (`draft-blumenthal-aes-usm-04 <https:://tools.ietf.org/html/draft-blumenthal-aes-usm-04#section-3>`_) with Reeder key localization
+    # "CFB128-AES-256" -> The CFB128-AES-256 Symmetric Encryption Protocol (`draft-blumenthal-aes-usm-04 <https:://tools.ietf.org/html/draft-blumenthal-aes-usm-04#section-3>`_) with Reeder key localization
+    # "CFB192-AES-BLU" -> The CFB192-AES-BLUMENTAL Symmetric Encryption Protocol (`draft-blumenthal-aes-usm-04 <https:://tools.ietf.org/html/draft-blumenthal-aes-usm-04#section-3>`_)
+    # "CFB256-AES-BLU" -> The CFB128-AES-256 Symmetric Encryption Protocol (`draft-blumenthal-aes-usm-04 <https:://tools.ietf.org/html/draft-blumenthal-aes-usm-04#section-3>`_)
+    # "PASS-PHRASE" -> USM key material type - plain-text pass phrase (:RFC:`3414#section-2.6`)
+    # "MASTER-KEY" -> USM key material type - hashed pass-phrase AKA master key (:RFC:`3414#section-2.6`)
+    # "HASHED-PASS-PHRASE" -> USM key material type - hashed pass-phrase hashed with Context SNMP Engine ID (:RFC:`3414#section-2.6`)
+
   - host: server-ip-or-name
     port: server-port (standard for snmpv3 is 161)
     username: "user-name-to-connect"
