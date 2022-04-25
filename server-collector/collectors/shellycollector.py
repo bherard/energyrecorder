@@ -89,9 +89,9 @@ def main():
     logging.basicConfig(level=logging.DEBUG)
 
     redfish_server_conf = {
-        "base_url": "10.10.10.14",
+        "base_url": "1.2.3.4",
         "user": "admin",
-        "pass": "pamaju5onshelly",
+        "pass": "foobar",
         "power": True,
         "temperature": True
     }
