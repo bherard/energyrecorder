@@ -207,6 +207,20 @@ PODS:
         unit: deg C
       etc, etc
 
+  #shelly plug
+  - host: plug-ip-or-name[:port]
+  # At your choice
+    id: server-id
+    type: shelly
+    user: shelly-user
+    pass: shelly-user-password
+    # Following parameter is optional (default is True)
+    # active: False|True 
+    # Following parameter is optional (default is True): get power
+    # power: False|True 
+    # Following parameter is optional (default is True) get temperature sensor
+    # temperatures: False|True 
+
 RECORDER_API_SERVER:
   base_url: https://recordingapi.myserver.com
   pass: ''

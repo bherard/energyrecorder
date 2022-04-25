@@ -58,29 +58,42 @@ class ShellyCollector(SensorsCollector):
         """Get Box power."""
 
         result = []
-        rqt_url = F"http://{self.server_conf['base_url']}/status"
-        resp = requests.get(
-            rqt_url,
-            auth=self.pod_auth,
-            verify=False
-        )
-        if resp.status_code == 200:
-            if self.server_conf["temperature"]:
-                result.append(
-                    self.generate_sensor_data(
-                        "temperature",
-                        "°C",
-                        resp.json()["temperature"]
+        try:
+            rqt_url = F"http://{self.server_conf['base_url']}/status"
+            resp = requests.get(
+                rqt_url,
+                auth=self.pod_auth,
+                verify=False
+            )
+            if resp.status_code == 200:
+                if self.server_conf["temperature"]:
+                    result.append(
+                        self.generate_sensor_data(
+                            "temperature",
+                            "°C",
+                            resp.json()["temperature"]
+                        )
                     )
-                )
-            if self.server_conf["power"]:
-                result.append(
-                    self.generate_sensor_data(
-                        "power",
-                        "W",
-                        resp.json()["meters"][0]["power"]
+                if self.server_conf["power"]:
+                    result.append(
+                        self.generate_sensor_data(
+                            "power",
+                            "W",
+                            resp.json()["meters"][0]["power"]
+                        )
                     )
+            else:
+                self.log.error(
+                    "[%s]: Error while connecting shelly plug (%d): %s",
+                    self.name,
+                    resp.status_code,
+                    resp.text
                 )
+        except Exception as exc:  #plylint: disable=broad-except
+            self.log.exception(
+                "[%s]: Unhandled error while getting data from shelly plug",
+                self.name
+            )
         return result
 
 
