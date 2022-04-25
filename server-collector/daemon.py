@@ -46,6 +46,7 @@ from collectors.power.ilo_gui_collector import ILOGUICollector
 from collectors.power.ilocollector import ILOCollector
 from collectors.power.intel_gui_collector import INTELGUICollector
 from collectors.power.ipmicollector import IPMICollector
+from collectors.shellycollector import ShellyCollector
 
 # Create a list of active pollers
 POLLERS = []
@@ -328,6 +329,18 @@ def get_collector(server, pod, config):
             pod["environment"],
             server["id"],
             ftp_server_conf,
+            config["RECORDER_API_SERVER"]
+        )
+    elif server["type"] == ShellyCollector.type:
+        server_conf = {
+            "base_url": server['host'],
+            "user": server["user"],
+            "pass": server["pass"]
+        }
+        the_collector = ShellyCollector(
+            pod["environment"],
+            server["id"],
+            server_conf,
             config["RECORDER_API_SERVER"]
         )
     else:

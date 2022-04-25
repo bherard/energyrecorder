@@ -211,9 +211,11 @@ class RedfishCollector(SensorsCollector):
             self.name,
             rqt_url
         )
-        response = requests.get(rqt_url,
-                                auth=self.pod_auth,
-                                verify=False)
+        response = requests.get(
+            rqt_url,
+            auth=self.pod_auth,
+            verify=False
+        )
         thermal_metrics = json.loads(response.text)
 
         for thermal in thermal_metrics["Temperatures"]:
