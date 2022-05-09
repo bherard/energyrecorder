@@ -151,6 +151,7 @@ class SensorsPoster(Thread):
                 "base_url": "Recorder API base URL",
                 "user": Basic authentication user,
                 "pass": Basic authentication password
+                "proxy": optional, proxy to use to connect recording apy
             }
 
         """
@@ -191,6 +192,14 @@ class SensorsPoster(Thread):
             else:
                 verify_cert = True
 
+            if "proxy" in self.data_server:
+                proxies = {
+                    "http": self.data_server["proxy"],
+                    "https": self.data_server["proxy"]
+                }
+            else:
+                proxies = None
+
             connect_timeout = 10
             read_timeout = 300
             if "timeout" in self.data_server:
@@ -222,7 +231,8 @@ class SensorsPoster(Thread):
                         'content-type': 'application/json'
                     },
                     verify=verify_cert,
-                    timeout=(connect_timeout, read_timeout)
+                    timeout=(connect_timeout, read_timeout),
+                    proxies=proxies
                 )
 
                 self.log.debug(

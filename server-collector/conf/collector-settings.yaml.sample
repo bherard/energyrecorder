@@ -229,4 +229,6 @@ RECORDER_API_SERVER:
   # verify_cert: True
   # Uncomment the following line to overide default timeout (2s) to send data
   # timeout: 5
+  # uncomment the folowwing line to use a proxy (same for http & https) to connect recordinf API
+  #proxy: http://my-proxy:3128
 
