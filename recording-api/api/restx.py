@@ -12,7 +12,7 @@
 # <http://www.apache.org/licenses/LICENSE-2.0.html>
 #
 # -------------------------------------------------------
-# File Name   : api/restplus.py
+# File Name   : api/restx.py
 #
 # Created     : 2017-02
 # Authors     : Benoit HERARD <benoit.herard(at)orange.com>
@@ -25,7 +25,7 @@
 #
 import logging
 
-from flask_restplus import Api
+from flask_restx import Api
 import settings
 
 LOG = logging.getLogger(__name__)

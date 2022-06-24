@@ -28,13 +28,13 @@ import random
 import requests
 
 from flask import request
-from flask_restplus import Resource
+from flask_restx import Resource
 from werkzeug.exceptions import NotFound
 
 import settings
 from api.datamodel import API_STATUS, MEASUREMENT_POST
 from api.datamodel import APIStatusClass, RunningScenarioClass
-from api.restplus import API as api
+from api.restx import API as api
 from api.endpoints.recorder import Recorder
 
 

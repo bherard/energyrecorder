@@ -29,10 +29,10 @@ import urllib
 import json
 import requests
 
-from flask_restplus import Resource
+from flask_restx import Resource
 import settings
 from api.datamodel import API_STATUS, APIStatusClass
-from api.restplus import API as api
+from api.restx import API as api
 
 
 NS = api.namespace('monitoring',

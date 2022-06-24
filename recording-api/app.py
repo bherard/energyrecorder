@@ -26,7 +26,7 @@
 import logging.config
 import sys
 
-import flask_restplus.apidoc
+import flask_restx.apidoc
 import requests
 import yaml
 from flask import Blueprint, Flask
@@ -36,7 +36,7 @@ from api.endpoints.monitoring import NS as monitoring_namespace
 from api.endpoints.recorder import NS as recorder_namespace
 from api.endpoints.servers import NS as servers_namespace
 from api.endpoints.equipements import NS as equipements_namespace
-from api.restplus import API as api
+from api.restx import API as api
 
 APP = Flask(__name__)
 
@@ -128,19 +128,19 @@ def configure_app(flask_app):
     """
     flask_app.config[
         'SWAGGER_UI_DOC_EXPANSION'
-    ] = settings.RESTPLUS_SWAGGER_UI_DOC_EXPANSION
+    ] = settings.RESTX_SWAGGER_UI_DOC_EXPANSION
 
     flask_app.config[
-        'RESTPLUS_VALIDATE'
-    ] = settings.RESTPLUS_VALIDATE
+        'RESTX_VALIDATE'
+    ] = settings.RESTX_VALIDATE
 
     flask_app.config[
-        'RESTPLUS_MASK_SWAGGER'
-    ] = settings.RESTPLUS_MASK_SWAGGER
+        'RESTX_MASK_SWAGGER'
+    ] = settings.RESTX_MASK_SWAGGER
 
     flask_app.config[
         'ERROR_404_HELP'
-    ] = settings.RESTPLUS_ERROR_404_HELP
+    ] = settings.RESTX_ERROR_404_HELP
 
     flask_app.config[
         'APPLICATION_ROOT'
@@ -168,7 +168,7 @@ def initialize_app(flask_app):
     api.add_namespace(recorder_namespace)
     api.add_namespace(monitoring_namespace)
 
-    api_doc = flask_restplus.apidoc.apidoc
+    api_doc = flask_restx.apidoc.apidoc
     api_doc.url_prefix = settings.API["context_root"] + "/doc"
     flask_app.register_blueprint(blueprint)
     requests.urllib3.disable_warnings()

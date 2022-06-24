@@ -23,8 +23,8 @@
 # History     :
 # 1.0.0 - 2017-02-20 : Release of the file
 #
-from flask_restplus import fields
-from api.restplus import API
+from flask_restx import fields
+from api.restx import API
 
 # Model desecription for methods parameters
 POWER_POST = API.model('powerPost', {

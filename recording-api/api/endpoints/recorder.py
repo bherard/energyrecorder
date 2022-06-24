@@ -29,12 +29,12 @@ import json
 import urllib
 import requests
 
-from flask_restplus import Resource
+from flask_restx import Resource
 from flask import request
 import settings
 from api.datamodel import RUNNING_SCENARIO, RunningScenarioClass
 from api.datamodel import STEP_POST, RECORDER_POST
-from api.restplus import API as api
+from api.restx import API as api
 
 RUNNING_SCENARIO_RP = "running_scenarios_rp"
 
