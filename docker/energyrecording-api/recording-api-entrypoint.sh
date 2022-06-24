@@ -4,18 +4,18 @@
 # python app.py &
 
 function startInflux(){
-        AUTH_ENABLED="false"
         influxd &
-        sleep 1
-        echo "show databases" | influx -username "$1" -password "$2"|grep NRG
+        sleep 20
+        if [ "$1" != "" ] ; then
+                echo "show databases" | influx -username "$1" -password "$2"|grep NRG
+        else
+                echo "show databases" | influx |grep NRG
+        fi
         if [ $? -ne 0 ] ; then
                 curl https://raw.githubusercontent.com/bherard/energyrecorder/master/influx/creation.iql|influx
                 echo "CREATE USER $1 WITH PASSWORD '"$2"' WITH ALL PRIVILEGES"|influx
                 echo "CREATE USER $3 WITH PASSWORD '"$4"'"|influx
                 echo "GRANT READ ON NRG TO $3"|influx
-                if [ "$1" != "" ] ; then
-                        AUTH_ENABLED="true"
-                fi
         else
                 echo "Database already exists"
         fi

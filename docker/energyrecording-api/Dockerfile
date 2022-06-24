@@ -1,7 +1,9 @@
 FROM influxdb:1.8.6-alpine
 LABEL maintainer="benoit.herard@orange.com"
 
+
 EXPOSE 80/tcp
+EXPOSE 8086
 
 RUN apk --update add git python3 py3-pip bash ca-certificates curl uwsgi-python3 nginx;\
     update-ca-certificates ; \
