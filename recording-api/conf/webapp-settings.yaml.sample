@@ -31,4 +31,5 @@ BIND: "0.0.0.0:8888"
 
 # Set ALWAYS_RECORD to True to record Servers comnsuption even 
 # if no running scenario found
-#ALWAYS_RECORD: True
+# Unset or set to False to only record if a recording sessoin is created
+ALWAYS_RECORD: True
