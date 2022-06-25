@@ -18,25 +18,26 @@ More information available at https://wiki.opnfv.org/display/testing/Power+consu
 API is available on dockerhub with `bherard/energyrecorder-api`.
 
 Container mais be started with following parameters:
-    * -proxy: When stating, container download some additional config files. If container can't connect internet directly define proxy to use with this flag.
-    * -nofinflux: Embed InfluxDB server is not configured nor started with API. (if set, you have to manulaly configure API DB Conenction parameters).
-    * -admin-user USER: Influx DB admin user name (all privileges).
-    * -admin-password PASS: Password for admin user.
-    * -readonly-username USER: Influx DB user name with read on privileges.
-    * -readonly-password PASS: Password for read only user name.
+- -proxy: When stating, container download some additional config files. If container can't connect internet directly define proxy to use with this flag.
+- -nofinflux: Embed InfluxDB server is not configured nor started with API. (if set, you have to manulaly configure API DB Conenction parameters).
+- -admin-user USER: Influx DB admin user name (all privileges).
+- -admin-password PASS: Password for admin user.
+- -readonly-username USER: Influx DB user name with read on privileges.
+- -readonly-password PASS: Password for read only user name.
 
 **NOTE**:
-    * -admin-user, -admin-password, -readonlyuser and -readonly-password should be set all together or none of them.
-    * -admin-user, -admin-password, -readonlyuser and -readonly-password make no sens with -noinflux.
+- -admin-user, -admin-password, -readonlyuser and -readonly-password should be set all together or none of them.
+- -admin-user, -admin-password, -readonlyuser and -readonly-password make no sens with -noinflux.
+
 **VOLUME MOUNT (useful path in the container to bind as  volume)**:
-    * influxDB configuration is located in /etc/influxdb/influxdb.conf
-    * influxDB data is located in /var/lib/influxdb/
-    * API config files (incl. logging) is located in /usr/local/energyrecorder/recording-api/conf/
-    * API logs are located in /var/log/energyrecorder
+- influxDB configuration is located in /etc/influxdb/influxdb.conf
+- influxDB data is located in /var/lib/influxdb/
+- API config files (incl. logging) is located in /usr/local/energyrecorder/recording-api/conf/
+-- API logs are located in /var/log/energyrecorder
 
 **LISTENING PORT:**
-    * API is listening on port 80 (Swagger for API available at http://container/resources/doc/ )
-    * Influx is listening on port 8086
+- API is listening on port 80 (Swagger for API available at http://container/resources/doc/ )
+- Influx is listening on port 8086
 
 Basic example of start command with docker:
 ```bash
