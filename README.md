@@ -15,7 +15,7 @@ More information available at https://wiki.opnfv.org/display/testing/Power+consu
 
 ## recording-api
 
-API is available on dockerhub with `bherard/energyrecorder-api`.
+API is available on dockerhub with `bherard/energyrecorder-api` as a ready to use image.
 
 Container mais be started with following parameters:
 - -proxy: When stating, container download some additional config files. If container can't connect internet directly define proxy to use with this flag.
@@ -44,7 +44,7 @@ Basic example of start command with docker:
     docker start -d --name energyrecorder-api \
     -v /path/on/host/for/influx/data:/var/lib/influxdb/ \
     -v /path/on/host/for/influx/config:/etc/influxdb/ \
-    - /path/on/host/for/api/config:/usr/local/energyrecorder/recording-api/conf/
+    -v /path/on/host/for/api/config:/usr/local/energyrecorder/recording-api/conf/
     -v /path/on/host/for/api/logs:/var/log/energyrecorder \
     -p 80:80 \
     -p 8086:8086 \
@@ -56,4 +56,83 @@ Basic example of start command with docker:
     -readonly-password reader-password
 ```
 
+## collector
 
+Collector is available on dockerhub with `bherard/energyrecorder-collector` as a ready to use image.
+
+### Config file structure
+
+Config file contains 2 main sections:
+- equipments to poll (see `PODS` in sample config file)
+- API connection parameters (see `RECORDER_API_SERVER`)
+
+#### API Connection parameters
+Ex:
+```yaml
+RECORDER_API_SERVER:
+  base_url: https://recordingapi.myserver.com
+  user: 'jdoe'
+  pass: 'ipsum-lorem'
+  verify_cert: True
+  timeout: 5
+  proxy: http://my-proxy:3128
+```
+
+where:
+- `base_url`: server where recording API is running
+- `user`: basic authentication user to use to connect recoding API (leave empty if not protected)
+- `pass`: basic authentication user's password to use to connect recoding API (leave empty if not protected)
+- `verify_cert`: Optional (default True). Allow to disable SSL Certs verification (issuer, hostname...) when connection API with https
+- `timeout`: Optional (default 2) Timeout in sec. to send data to recording API.
+- `proxy`: Optional. http proxy to use to connect recording API.
+
+
+### Equiments to poll
+The `PODS` section define a list of environnement to poll. The `environnement` key is used to create groups of servers.
+
+Each environnement appears as a tag on measurements in InfluxDB.
+
+An environnement is a list of equipements (servers) to poll.
+
+Environnement settings keys are:
+- `environment`: Environment name (as it will appears in Influx)
+- `active`: false a true. If false, servers polling is not started when collector starts
+- `polling_interval`: Polling interval in seconds.
+- `servers`: List of equipements for this env.
+
+
+Each equipement may use different protocols adapters (type) but share some config settings:
+- `id`: Server unique identifier (appears as a tag on measurements in Influx)
+- `active`: false a true. If false, server polling is not started when collector starts
+- `type`: protocol adapter identifier (see collector config sample file for more details)
+
+The list of supported protocols and the way to configure then is define in the collector settings config file sample [server-collector/conf/collector-settings.yaml.sample](https://github.com/bherard/energyrecorder/blob/master/server-collector/conf/collector-settings.yaml.sample)
+
+## Docker image
+
+You have to setup a collector config befor starting it as container.
+
+For this, first download [server-collector/conf/collector-settings.yaml.sample](https://github.com/bherard/energyrecorder/blob/master/server-collector/conf/collector-settings.yaml.sample) and [server-collector/conf/collector-logging.yaml.sample](https://github.com/bherard/energyrecorder/blob/master/server-collector/conf/collector-logging.yaml.sample) and stor it locally.
+
+Then remove the `.sample` extension and change configuration according to your need.
+(our recommandation is to keep /var/log/energyrecorder/server-collector.log for logging location and to create a contaner volume for /var/log/energyrecorder)
+
+Use those files by using their location folder as volume for /usr/local/energyrecorder/server-collector/conf/
+
+Basic example of start command with docker:
+```bash
+    docker start -d --name energy-collector \
+    -v /path/on/host/for/collector/config:/usr/local/energyrecorder/server-collector/ \
+    -v /path/on/host/for/collector/logs:/var/log/energyrecorder \
+    --restart always \
+    bherard/energyrecorder-collector
+```
+
+## Recommandation about multi-env
+
+Instead of creating a unique collector container with a configuration for all env. and servers, our recommandation is to create many containers (earch on with a sing env. configuration).
+
+There is multple benefits for this:
+- it allow to start or stop polling for an environment idenpendently from the others
+- config file  simplyer
+- due to Threading limitation with python it allow a better spreading load of polling over all CPU of running host.
