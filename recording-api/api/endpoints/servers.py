@@ -32,9 +32,9 @@ from werkzeug.exceptions import NotFound
 
 import settings
 from api.datamodel import POWER_MEASUREMENT, POWER_POST
-from api.datamodel import PowerMeasurementClass, RunningScenarioClass
 from api.restx import API as api
 from api.endpoints.recorder import Recorder
+from service.datamodel import PowerMeasurementClass, RunningScenarioClass
 
 
 NS = api.namespace('servers', description='Operations related to servers')

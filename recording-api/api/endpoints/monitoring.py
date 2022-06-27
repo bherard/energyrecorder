@@ -31,8 +31,9 @@ import requests
 
 from flask_restx import Resource
 import settings
-from api.datamodel import API_STATUS, APIStatusClass
+from api.datamodel import API_STATUS
 from api.restx import API as api
+from service.datamodel import APIStatusClass
 
 
 NS = api.namespace('monitoring',
