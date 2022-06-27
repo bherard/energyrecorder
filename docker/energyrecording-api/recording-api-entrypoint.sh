@@ -194,8 +194,10 @@ confApp "$1" "$2"
 if [ $INFLUX -eq 1 ] ; then
         startInflux "$1" "$2" "$3" "$4"
 fi
-startUwsgi
-startNginx
+# startUwsgi
+# startNginx
+cd /usr/local/energyrecorder/recording-api
+su recording-api -c "gunicorn -w $(expr $(nproc) + 1) -b 0.0.0.0:80 app:APP"
 while [ 1 ] ; do
         sleep 1
 done

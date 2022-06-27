@@ -13,13 +13,16 @@ RUN apk --update add git python3 py3-pip bash ca-certificates curl uwsgi-python3
     git clone https://github.com/bherard/energyrecorder &&\
     cd energyrecorder &&\
     pip install -r recording-api/requirements.txt &&\
-    mv /entrypoint.sh /influx-entrypoint.sh
+    mv /entrypoint.sh /influx-entrypoint.sh && \
+    addgroup recording-api && \
+    adduser -D -G recording-api recording-api
 
-#ADD recording-api-entrypoint.sh /entrypoint.sh
+ADD recording-api-entrypoint.sh /entrypoint.sh
 RUN curl https://raw.githubusercontent.com/bherard/energyrecorder/master/docker/energyrecording-api/recording-api-entrypoint.sh -o /entrypoint.sh &&\
-RUN	chmod u+x /entrypoint.sh &&\
+	chmod u+x /entrypoint.sh &&\
 	wget https://raw.githubusercontent.com/bherard/energyrecorder/master/influx/create-certs.sh -O /usr/local/bin/create-certs.sh &&\
 	chmod u+x /usr/local/bin/create-certs.sh &&\
 	echo DONE
+
 
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
