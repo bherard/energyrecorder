@@ -1,4 +1,4 @@
-FROM influxdb:1.8.6-alpine
+FROM influxdb:1.8.10-alpine
 LABEL maintainer="benoit.herard@orange.com"
 
 
@@ -17,7 +17,7 @@ RUN apk --update add git python3 py3-pip bash ca-certificates curl uwsgi-python3
 
 #ADD recording-api-entrypoint.sh /entrypoint.sh
 RUN curl https://raw.githubusercontent.com/bherard/energyrecorder/master/docker/energyrecording-api/recording-api-entrypoint.sh -o /entrypoint.sh &&\
-	chmod u+x /entrypoint.sh &&\
+RUN	chmod u+x /entrypoint.sh &&\
 	wget https://raw.githubusercontent.com/bherard/energyrecorder/master/influx/create-certs.sh -O /usr/local/bin/create-certs.sh &&\
 	chmod u+x /usr/local/bin/create-certs.sh &&\
 	echo DONE

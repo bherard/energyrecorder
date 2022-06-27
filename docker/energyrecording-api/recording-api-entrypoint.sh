@@ -27,12 +27,14 @@ function startInflux(){
         grep '\[http\]' /etc/influxdb/influxdb.conf >/dev/null
         if [ $? -ne 0 ] ; then
         cat <<EOF >> /etc/influxdb/influxdb.conf
+  query-log-enabled = false
 
 [http]
 enabled = true
 auth-enabled = $AUTH_ENABLED
 https-enabled = false
 https-certificate = "/etc/ssl/influxdb.pem"
+access-log-path = "/dev/null"
 flux-enabled = true
 EOF
         fi
@@ -72,7 +74,13 @@ function startNginx(){
         unset http_proxy
         unset https_proxy
         sed -i 's/^\(.*client_max_body_size\).*/\1 20m;/' /etc/nginx/nginx.conf
-        cat <<EOF > /etc/nginx/conf.d/default.conf
+        if [ -d /etc/nginx/conf.d/ ]; then              
+                NGINX_CONF_FILE=/etc/nginx/conf.d/default.conf
+        else         
+                NGINX_CONF_FILE=/etc/nginx/http.d/default.conf        
+        fi                                                            
+                                                      
+        cat <<EOF > $NGINX_CONF_FILE                                           
 server {
         listen 80 default_server;
         listen [::]:80 default_server;
