@@ -23,23 +23,22 @@
 # History     :
 # 1.0.0 - 2019-04-10 : Release of the file
 #
-import datetime
-import json
 import logging
 import random
 
 import requests
-import paho.mqtt.client as mqtt
 
 from flask import request
 from flask_restx import Resource
-from werkzeug.exceptions import NotFound
+from service.mqtt import MQTTService
 
 import settings
 from api.datamodel import API_STATUS, MEASUREMENT_POST
 from api.restx import API as api
-from api.endpoints.recorder import Recorder
 from service.datamodel import APIStatusClass, RunningScenarioClass
+from service.exception import RecordingException
+from service.recorder import RecorderService
+from service.mqtt import MQTTService
 
 NS = api.namespace(
     'equipments',
@@ -53,48 +52,10 @@ class EquipementMeasurements(Resource):
 
     log = logging.getLogger(__name__)
 
-    _mqtt_client = None
 
-    def _mqtt_publish(
-        self,
-        environment,
-        equipement,
-        scenario,
-        step,
-        sensor,
-        unit,
-        value,
-        time
-    ):
-
-        if settings.MQTT:
-            if not self._mqtt_client:
-                self._mqtt_client = mqtt.Client(str(datetime.datetime.now().timestamp()))
-                if "user" in settings.MQTT and settings.MQTT["user"]:
-                    self._mqtt_client.username_pw_set(
-                        settings.MQTT["user"],
-                        settings.MQTT["pass"]
-                    )
-                self._mqtt_client.connect(
-                    settings.MQTT["host"],
-                    settings.MQTT["port"],
-                )
-            
-            self._mqtt_client.publish(
-                F'{settings.MQTT["base_path"]}/{environment}/{equipement}/{sensor}',
-                json.dumps(
-                    {
-                        "environment": environment,
-                        "equipement": equipement,
-                        "scenario": scenario,
-                        "step": step,
-                        "sensor": sensor,
-                        "unit": unit,
-                        "value": value,
-                        "timestamp": time if time else int(datetime.datetime.now().timestamp())
-                    }
-                )
-            )
+    def __init__(self, api=None, *args, **kwargs):
+        super().__init__(api, *args, **kwargs)
+        self._mqtt_svc = MQTTService()
 
     @api.expect(MEASUREMENT_POST)
     @api.marshal_with(API_STATUS)
@@ -108,7 +69,7 @@ class EquipementMeasurements(Resource):
         """
 
         data = request.json
-        recorder_manager = Recorder()
+        recorder_manager = RecorderService()
 
         self.log.info(
             "POST measurements for equiment %s in environment %s",
@@ -122,13 +83,14 @@ class EquipementMeasurements(Resource):
                 data.get("environment"),
                 time
             )
-        except NotFound as exc:
-            if settings.ALWAYS_RECORD:
-                recorder = RunningScenarioClass(
-                    data.get("environment"),
-                    "n/s",
-                    "n/s"
-                )
+        except RecordingException as exc:
+            if  exc.http_status ==  404:
+                if settings.ALWAYS_RECORD:
+                    recorder = RunningScenarioClass(
+                        data.get("environment"),
+                        "n/s",
+                        "n/s"
+                    )
             else:
                 raise exc
 
@@ -163,7 +125,7 @@ class EquipementMeasurements(Resource):
                 
                 sm_influx_data = sm_influx_data + " " + str(sm_time)
 
-            self._mqtt_publish(
+            self._mqtt_svc.publish(
                 recorder.environment,
                 equipement,
                 recorder.scenario,

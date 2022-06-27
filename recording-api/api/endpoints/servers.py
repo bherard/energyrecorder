@@ -28,13 +28,13 @@ import requests
 
 from flask import request
 from flask_restx import Resource
-from werkzeug.exceptions import NotFound
 
 import settings
 from api.datamodel import POWER_MEASUREMENT, POWER_POST
 from api.restx import API as api
-from api.endpoints.recorder import Recorder
 from service.datamodel import PowerMeasurementClass, RunningScenarioClass
+from service.exception import RecordingException
+from service.recorder import RecorderService
 
 
 NS = api.namespace('servers', description='Operations related to servers')
@@ -63,7 +63,7 @@ class ServerConsumption(Resource):
         """
 
         data = request.json
-        recorder_manager = Recorder()
+        recorder_manager = RecorderService()
 
         self.log.info(
             "POST server %s consumption %s in environment %s",
@@ -78,13 +78,14 @@ class ServerConsumption(Resource):
                 data.get("environment"),
                 time
             )
-        except NotFound as exc:
-            if settings.ALWAYS_RECORD:
-                recorder = RunningScenarioClass(
-                    data.get("environment"),
-                    "n/s",
-                    "n/s"
-                )
+        except RecordingException as exc:
+            if exc.http_status == 404:
+                if settings.ALWAYS_RECORD:
+                    recorder = RunningScenarioClass(
+                        data.get("environment"),
+                        "n/s",
+                        "n/s"
+                    )
             else:
                 raise exc
 
