@@ -42,4 +42,4 @@ INFLUX = {}
 BIND = None
 MQTT = {}
 
-ALWAYS_RECORD = False
+ALWAYS_RECORD = True

@@ -55,7 +55,27 @@ Basic example of start command with docker:
     -readonly-user reader \
     -readonly-password DEFINE-YOURS
 ```
+### Config file (webapp-settings.yaml)
+```yaml
+INFLUX:
+    host: "http://localhost:8086" #InfluxDB host and protocol
+    db: "NRG" # API DB
+    user: "influx-write-user" # Influx User with write privileges (if auth enabled)
+    pass: "influx-write-user-pass" #  Influx User's password (if auth enabled)
 
+# Optional: Set ALWAYS_RECORD to True to record Servers comnsuption even 
+# if no running scenario found, else data comming form equipments are only recorded if a scenario is running (Default True)
+ALWAYS_RECORD : False
+
+# Optional - republish received data on MQTT (SSL not supported)
+MQTT: 
+    host: localhost # MQTT Host
+    port: 1883 # Optional, MQTT Port (default 1883)
+    user: mqtt-user # If auth enabled
+    pass: mqqt-user-pass # If auth enabled
+    base_path: nrj4it # Optional, Topic prefix (without ending /) (default empty)
+
+```
 ## collector
 
 Collector is available on dockerhub with `bherard/energyrecorder-collector` as a ready to use image.
