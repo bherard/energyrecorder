@@ -40,5 +40,6 @@ API = {
 
 INFLUX = {}
 BIND = None
+MQTT = {}
 
 ALWAYS_RECORD = False

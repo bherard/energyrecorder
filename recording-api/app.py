@@ -202,6 +202,11 @@ def load_config():
             config = yaml.safe_load(stream)
             settings.BIND = config["BIND"]
             settings.INFLUX = config["INFLUX"]
+            settings.MQTT = config["MQTT"] if "MQTT" in config else None
+            if settings.MQTT and "port" not in settings.MQTT:
+                settings.MQTT["port"] = 1883
+            if settings.MQTT and "base_path" not in settings.MQTT:
+                settings.MQTT["base_path"] = ""
             if "ALWAYS_RECORD" in config:
                 settings.ALWAYS_RECORD = config["ALWAYS_RECORD"]
         except yaml.YAMLError:

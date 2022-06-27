@@ -23,9 +23,13 @@
 # History     :
 # 1.0.0 - 2019-04-10 : Release of the file
 #
+import datetime
+import json
 import logging
 import random
+
 import requests
+import paho.mqtt.client as mqtt
 
 from flask import request
 from flask_restx import Resource
@@ -33,10 +37,9 @@ from werkzeug.exceptions import NotFound
 
 import settings
 from api.datamodel import API_STATUS, MEASUREMENT_POST
-from api.datamodel import APIStatusClass, RunningScenarioClass
 from api.restx import API as api
 from api.endpoints.recorder import Recorder
-
+from service.datamodel import APIStatusClass, RunningScenarioClass
 
 NS = api.namespace(
     'equipments',
@@ -49,6 +52,49 @@ class EquipementMeasurements(Resource):
     """Server consumption management API."""
 
     log = logging.getLogger(__name__)
+
+    _mqtt_client = None
+
+    def _mqtt_publish(
+        self,
+        environment,
+        equipement,
+        scenario,
+        step,
+        sensor,
+        unit,
+        value,
+        time
+    ):
+
+        if settings.MQTT:
+            if not self._mqtt_client:
+                self._mqtt_client = mqtt.Client(str(datetime.datetime.now().timestamp()))
+                if "user" in settings.MQTT and settings.MQTT["user"]:
+                    self._mqtt_client.username_pw_set(
+                        settings.MQTT["user"],
+                        settings.MQTT["pass"]
+                    )
+                self._mqtt_client.connect(
+                    settings.MQTT["host"],
+                    settings.MQTT["port"],
+                )
+            
+            self._mqtt_client.publish(
+                F'{settings.MQTT["base_path"]}/{environment}/{equipement}/{sensor}',
+                json.dumps(
+                    {
+                        "environment": environment,
+                        "equipement": equipement,
+                        "scenario": scenario,
+                        "step": step,
+                        "sensor": sensor,
+                        "unit": unit,
+                        "value": value,
+                        "timestamp": time if time else int(datetime.datetime.now().timestamp())
+                    }
+                )
+            )
 
     @api.expect(MEASUREMENT_POST)
     @api.marshal_with(API_STATUS)
@@ -111,11 +157,22 @@ class EquipementMeasurements(Resource):
             sm_influx_data += " value="
             sm_influx_data += str(measurement["value"])
 
-            if time is not None and time > 10e+9:
+            if time and time > 10e+9:
                 #Introduce aleat of 0..9999 nano sec to avoid data mixup
                 sm_time = time + random.randint(0,9999)
                 
                 sm_influx_data = sm_influx_data + " " + str(sm_time)
+
+            self._mqtt_publish(
+                recorder.environment,
+                equipement,
+                recorder.scenario,
+                recorder.step,
+                measurement["sensor"],
+                measurement["unit"],
+                measurement["value"],
+                time
+            )
 
             if measurement["sensor"] == "power":
                 if pm_influx_data != "":
