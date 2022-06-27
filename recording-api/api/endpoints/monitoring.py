@@ -25,19 +25,17 @@
 #
 
 import logging
-import urllib
-import json
-import requests
 
 from flask_restx import Resource
-import settings
 from api.datamodel import API_STATUS
 from api.restx import API as api
-from service.datamodel import APIStatusClass
+from service.monitoring import MonitoringService
 
 
-NS = api.namespace('monitoring',
-                   description='API monitoring')
+NS = api.namespace(
+    'monitoring',
+    description='API monitoring'
+)
 
 
 @NS.route('/ping')
@@ -46,32 +44,9 @@ class Ping(Resource):
 
     logger = logging.getLogger(__name__)
 
-    def connect_influx(self):
-        """Try to connect influxDB."""
-
-        result = APIStatusClass("OK")
-        if settings.INFLUX["user"] is not None:
-            auth = (settings.INFLUX["user"], settings.INFLUX["pass"])
-        else:
-            auth = None
-
-        query = 'SHOW RETENTION POLICIES ON "{}"'
-        query = query.format(settings.INFLUX["db"])
-        influx_url = settings.INFLUX["host"] + "/query?q="
-        influx_url += urllib.parse.quote(query)
-        influx_url += "&db=" + urllib.parse.quote(settings.INFLUX["db"])
-        response = requests.get(influx_url, auth=auth, timeout=1, verify=False)
-        if response.status_code != 200:
-            error = json.loads(response.text)
-            raise Exception("Unable to connect influxDB: " + error["error"])
-        json_object = json.loads(response.text)
-        if "error" in json_object["results"][0]:
-            raise Exception(json_object["results"][0]["error"])
-        return result
-
     @api.marshal_with(API_STATUS)
     def get(self):
         """Return API status."""
         self.logger.debug("GET ping")
 
-        return self.connect_influx()
+        return MonitoringService().connect_influx()
