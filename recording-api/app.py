@@ -34,7 +34,7 @@ from flask import Blueprint, Flask
 import settings
 from api.endpoints.monitoring import NS as monitoring_namespace
 from api.endpoints.recorder import NS as recorder_namespace
-from api.endpoints.servers import NS as servers_namespace
+#from api.endpoints.servers import NS as servers_namespace
 from api.endpoints.equipements import NS as equipements_namespace
 from api.restx import API as api
 
@@ -164,7 +164,7 @@ def initialize_app(flask_app):
     api.init_app(blueprint)
 
     api.add_namespace(equipements_namespace)
-    api.add_namespace(servers_namespace)
+    #api.add_namespace(servers_namespace)
     api.add_namespace(recorder_namespace)
     api.add_namespace(monitoring_namespace)
 
@@ -177,21 +177,29 @@ def initialize_app(flask_app):
 @APP.after_request
 def after_request(response):
     """Add CORS Headers."""
-    response.headers.add('Access-Control-Allow-Origin',
-                         '*')
-    response.headers.add('Access-Control-Allow-Headers',
-                         'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods',
-                         'GET,PUT,POST,DELETE')
+    response.headers.add(
+        'Access-Control-Allow-Origin',
+        '*'
+    )
+    response.headers.add(
+        'Access-Control-Allow-Headers',
+        'Content-Type,Authorization'
+    )
+    response.headers.add(
+        'Access-Control-Allow-Methods',
+        'GET,PUT,POST,DELETE'
+    )
     return response
 
 
 def main():
     """Application launcher."""
     server_binding = settings.BIND.split(':')
-    APP.run(debug=settings.FLASK_DEBUG,
-            port=int(server_binding[1]),
-            host=server_binding[0])
+    APP.run(
+        debug=settings.FLASK_DEBUG,
+        port=int(server_binding[1]),
+        host=server_binding[0]
+    )
 
 
 def load_config():
