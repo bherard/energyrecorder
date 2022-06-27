@@ -19,7 +19,7 @@ API is available on dockerhub with `bherard/energyrecorder-api` as a ready to us
 
 Container mais be started with following parameters:
 - -proxy: When stating, container download some additional config files. If container can't connect internet directly define proxy to use with this flag.
-- -nofinflux: Embed InfluxDB server is not configured nor started with API. (if set, you have to manulaly configure API DB Conenction parameters).
+- -nofinflux: Embeded InfluxDB server is not configured nor started with API. (if set it, you have to manualy configure API DB Connection parameters in `webapp-settings.yaml` (see **VOLUME MOUNT** below ).
 - -admin-user USER: Influx DB admin user name (all privileges).
 - -admin-password PASS: Password for admin user.
 - -readonly-username USER: Influx DB user name with read on privileges.
@@ -51,9 +51,9 @@ Basic example of start command with docker:
     --restart always \
     bherard/energyrecorder-api \
     -admin-user admin \
-    -admin-password admin-password \
+    -admin-password DEFINE-YOURS \
     -readonly-user reader \
-    -readonly-password reader-password
+    -readonly-password DEFINE-YOURS
 ```
 
 ## collector
