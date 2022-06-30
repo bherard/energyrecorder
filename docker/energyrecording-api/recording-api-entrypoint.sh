@@ -130,7 +130,7 @@ container start parameters:  [-admin-user USER] [-admin-password PASS] [-readonl
         -nofinflux: Embed InfluxDB server is not configured nor started with API. (if set, you have to manulaly configure API DB Conenction parameters).
         -admin-user USER: Influx DB admin user name (all privileges).
         -admin-password PASS: Password for admin user.
-        -readonly-username USER: Influx DB user name with read on privileges.
+        -readonly-user USER: Influx DB user name with read on privileges.
         -readonly-password PASS: Password for read only user name.
         -h: this message.
 
@@ -185,7 +185,7 @@ done
 
 if [ "$ADMIN_USER" != "" -o "$ADMIN_PASS" != "" -o "$READER_USER" != "" -o "$READER_PASS" != "" ] ; then
         if [ "$ADMIN_USER" == "" -o "$ADMIN_PASS" == "" -o "$READER_USER" == "" -o "$READER_PASS" == "" ] ; then
-                echo "-admin-user, -admin-password, -readonlyuser and -readonly-password should be set all together or none of them."
+                echo "-admin-user, -admin-password, -readonly-user and -readonly-password should be set all together or none of them."
                 exit 1
         fi
 fi
@@ -197,7 +197,7 @@ fi
 # startUwsgi
 # startNginx
 cd /usr/local/energyrecorder/recording-api
-su recording-api -c "gunicorn -w $(expr $(nproc) + 1) -b 0.0.0.0:80 app:APP"
+su recording-api -c "gunicorn -w $(expr $(nproc) + 1) -b 0.0.0.0:8080 app:APP"
 while [ 1 ] ; do
         sleep 1
 done
