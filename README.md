@@ -18,6 +18,7 @@ More information available at https://wiki.opnfv.org/display/testing/Power+consu
 API is available on dockerhub with `bherard/energyrecorder-api` as a ready to use image.
 
 Container mais be started with following parameters:
+- -port: API Listening port (default 8080)
 - -proxy: When stating, container download some additional config files. If container can't connect internet directly define proxy to use with this flag.
 - -nofinflux: Embeded InfluxDB server is not configured nor started with API. (if set it, you have to manualy configure API DB Connection parameters in `webapp-settings.yaml` (see **VOLUME MOUNT** below ).
 - -admin-user USER: Influx DB admin user name (all privileges).
@@ -36,7 +37,7 @@ Container mais be started with following parameters:
 -- API logs are located in /var/log/energyrecorder
 
 **LISTENING PORT:**
-- API is listening on port 80 (Swagger for API available at http://container/resources/doc/ )
+- API is listening on port 8080 (Swagger for API available at http://container:8080/resources/doc/ )
 - Influx is listening on port 8086
 
 Basic example of start command with docker:
@@ -46,7 +47,7 @@ Basic example of start command with docker:
     -v /path/on/host/for/influx/config:/etc/influxdb/ \
     -v /path/on/host/for/api/config:/usr/local/energyrecorder/recording-api/conf/
     -v /path/on/host/for/api/logs:/var/log/energyrecorder \
-    -p 80:80 \
+    -p 80:8080 \
     -p 8086:8086 \
     --restart always \
     bherard/energyrecorder-api \

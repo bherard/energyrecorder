@@ -125,8 +125,9 @@ function confApp(){
 
 function usage(){
         cat <<EOF
-container start parameters:  [-admin-user USER] [-admin-password PASS] [-readonly-user USER] [-readonly-password PASS] [-proxy PROXY] [-noinflux] [-h]
+container start parameters:  [-port PORT] [-admin-user USER] [-admin-password PASS] [-readonly-user USER] [-readonly-password PASS] [-proxy PROXY] [-noinflux] [-h]
         -proxy: When stating, container download some additional config files. If container can't connect internet directly define proxy to use with this flag.
+        -port: API Listening port (default $BIND_PORT)
         -nofinflux: Embed InfluxDB server is not configured nor started with API. (if set, you have to manulaly configure API DB Conenction parameters).
         -admin-user USER: Influx DB admin user name (all privileges).
         -admin-password PASS: Password for admin user.
@@ -145,7 +146,7 @@ VOLUME MOUNT (useful path in the container to bind as  volume):
 
 
 LISTENING PORT:
-        * API is listening on port 80 (Swagger for API available at http://container/resources/doc/ )
+        * API is listening on port $BIND_PORT (Swagger for API available at http://container:$BIND_PORT/resources/doc/ )
         * Influx is listening on port 8086
 EOF
         exit 0
@@ -157,6 +158,7 @@ ADMIN_PASS=""
 READER_USER=""
 READER_PASS=""
 INFLUX=1
+BIND_PORT=8080
 while [ "$1" != "" ] ; do
         if [ "$1" == "-admin-user" ] ; then
                 shift
@@ -177,6 +179,9 @@ while [ "$1" != "" ] ; do
                 echo "proxy set to $1"
         elif [ "$1" == "-noinflux" ] ; then
                 INFLUX=0
+        elif [ "$1" == "-port" ] ; then
+                shift
+                BIND_PORT=$1
         elif [ "$1" == "-h" ] ; then
                 usage
         fi
@@ -197,8 +202,8 @@ fi
 # startUwsgi
 # startNginx
 cd /usr/local/energyrecorder/recording-api
-su recording-api -c "gunicorn -w $(expr $(nproc) + 1) -b 0.0.0.0:8080 app:APP"
-while [ 1 ] ; do
-        sleep 1
-done
+su recording-api -c "gunicorn -w $(expr $(nproc) + 1) -b 0.0.0.0:$BIND_PORT app:APP"
+# while [ 1 ] ; do
+#         sleep 1
+# done
 
