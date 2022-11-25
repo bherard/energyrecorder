@@ -57,6 +57,15 @@ class EquipementMeasurements(Resource):
         super().__init__(api, *args, **kwargs)
         self._mqtt_svc = MQTTService()
 
+    def _get_topology_as_tag(self, payload):
+
+        res = ""
+        if "topology" in payload:
+            for key in payload["topology"]:
+                value = payload['topology'][key].replace(' ', '\\ ')
+                res += F",{key}={value}"
+        return res
+
     @api.expect(MEASUREMENT_POST)
     @api.marshal_with(API_STATUS)
     def post(self, equipement):  # pylint: disable=locally-disabled,no-self-use
@@ -78,21 +87,18 @@ class EquipementMeasurements(Resource):
         )
 
         time = data.get("time", None)
-        try:
+        if settings.ALWAYS_RECORD:
+            recorder = RunningScenarioClass(
+                data.get("environment"),
+                "n/s",
+                "n/s"
+            )
+        else:
             recorder = recorder_manager.load_session(
                 data.get("environment"),
                 time
             )
-        except RecordingException as exc:
-            if  exc.http_status ==  404:
-                if settings.ALWAYS_RECORD:
-                    recorder = RunningScenarioClass(
-                        data.get("environment"),
-                        "n/s",
-                        "n/s"
-                    )
-            else:
-                raise exc
+
 
         result = APIStatusClass("OK")
 
@@ -112,6 +118,7 @@ class EquipementMeasurements(Resource):
             sm_influx_data += recorder.scenario.replace(' ', '\\ ')
             sm_influx_data += ",step="
             sm_influx_data += recorder.step.replace(' ', '\\ ')
+            sm_influx_data += self._get_topology_as_tag(data)
             sm_influx_data += ",sensor="
             sm_influx_data += measurement["sensor"].replace(' ', '\\ ')
             sm_influx_data += ",unit="
@@ -133,23 +140,9 @@ class EquipementMeasurements(Resource):
                 measurement["sensor"],
                 measurement["unit"],
                 measurement["value"],
-                time
+                time,
+                data["topology"] if "topology" in data else None
             )
-
-            if measurement["sensor"] == "power":
-                if pm_influx_data != "":
-                    pm_influx_data += "\n"
-
-                pm_influx_data = "PowerMeasurement,hardware="
-                pm_influx_data += equipement.replace(' ', '\\ ')
-                pm_influx_data += ",environment="
-                pm_influx_data += recorder.environment.replace(' ', '\\ ')
-                pm_influx_data += ",scenario="
-                pm_influx_data += recorder.scenario.replace(' ', '\\ ')
-                pm_influx_data += ",step="
-                pm_influx_data += recorder.step.replace(' ', '\\ ')
-                pm_influx_data += " power="
-                pm_influx_data += str(measurement["value"])
 
         if settings.INFLUX["user"] is not None:
             auth = (settings.INFLUX["user"], settings.INFLUX["pass"])

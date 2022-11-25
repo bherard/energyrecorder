@@ -38,7 +38,8 @@ class MQTTService:
         sensor,
         unit,
         value,
-        time
+        time,
+        topology=None
     ):
         """Publish a data to MQTT
 
@@ -58,6 +59,8 @@ class MQTTService:
         :type value: any
         :param time: Measurement timestamp
         :type time: int
+        :param topology: DOC Topology
+        :type unit: disct
         """
 
         if settings.MQTT:
@@ -73,18 +76,21 @@ class MQTTService:
                     settings.MQTT["port"],
                 )
             
+            data = {
+                "environment": environment,
+                "equipement": equipement,
+                "scenario": scenario,
+                "step": step,
+                "sensor": sensor,
+                "unit": unit,
+                "value": value,
+                "timestamp": time if time else int(datetime.datetime.now().timestamp())
+            }
+            if topology:
+                data["topology"] = topology
             self._mqtt_client.publish(
                 F'{settings.MQTT["base_path"]}/{environment}/{equipement}/{sensor}',
                 json.dumps(
-                    {
-                        "environment": environment,
-                        "equipement": equipement,
-                        "scenario": scenario,
-                        "step": step,
-                        "sensor": sensor,
-                        "unit": unit,
-                        "value": value,
-                        "timestamp": time if time else int(datetime.datetime.now().timestamp())
-                    }
+                    data
                 )
             )

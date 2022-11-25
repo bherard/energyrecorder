@@ -54,10 +54,36 @@ MEASUREMENT = API.model("measurement", {
         description="Measurement timestamp (default= current_timestamp)"
     )
 })
+TOPOLOGY = API.model("topology", {
+    "dc": fields.String(
+        required=False,
+        description="Data center",
+        example="myDC"
+    ),
+    "room": fields.String(
+        required=False,
+        description="Room in data center",
+        example="room#1"
+    ),
+    "row": fields.String(
+        required=False,
+        description="Row in room",
+        example="row#42"
+    ),
+    "rack": fields.String(
+        required=False,
+        description="Rack in row",
+        example="rack-B"
+    )
+})
 MEASUREMENT_POST = API.model("measurementPost", {
     'environment': fields.String(
         required=True,
         description='Recorder environment identifier'
+    ),
+    "topology": fields.Nested(
+        TOPOLOGY,
+        required=False
     ),
     "measurements": fields.List(
         fields.Nested(MEASUREMENT),
