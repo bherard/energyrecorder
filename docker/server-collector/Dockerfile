@@ -1,8 +1,8 @@
-FROM alpine
+FROM python:3.9
 LABEL maintainer="benoit.herard@orange.com"
 
 RUN apk update;\
-    apk add git bash python3 py3-pip ipmitool libc-dev gcc; \
+    apk add git bash ipmitool libc-dev gcc; \
     pip3 install --upgrade pip; \
     ln -s /usr/bin/python3 /usr/bin/python; \
     cd /usr/local;\
