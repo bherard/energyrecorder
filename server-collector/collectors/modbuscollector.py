@@ -26,7 +26,7 @@ from datetime import datetime
 import struct
 
 #from pyModbusTCP.client import ModbusClient
-from pymodbus.client.sync import ModbusTcpClient as ModbusClient
+from pymodbus.client import ModbusTcpClient as ModbusClient
 from pymodbus.transaction import ModbusRtuFramer, ModbusSocketFramer
 
 from utils.collector import SensorsCollector

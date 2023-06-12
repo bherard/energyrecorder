@@ -59,7 +59,7 @@ class ShellyCollector(SensorsCollector):
 
         result = []
         try:
-            rqt_url = F"http://{self.server_conf['base_url']}/status"
+            rqt_url = F"{self.server_conf['base_url']}/status"
             resp = requests.get(
                 rqt_url,
                 auth=self.pod_auth,
