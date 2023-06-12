@@ -1,7 +1,7 @@
 requests>=2.13.0
-pyyaml>=3.10
+pyyaml>=4.2b1
 dateutils>=0.6.6
-pyModbusTCP>=0.1.8
-pymodbus>=2.5.3
+pyModbusTCP>=0.2.0
+pymodbus>=3.2.2
 pytz>=2018.9
 pysnmp>=4.4.12
