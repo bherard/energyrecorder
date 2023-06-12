@@ -209,7 +209,7 @@ PODS:
 
   #shelly plug
   # See https://shelly.cloud/
-  - host: plug-ip-or-name[:port]
+  - host: http[s]://plug-ip-or-name[:port]
   # At your choice
     id: server-id
     type: shelly
