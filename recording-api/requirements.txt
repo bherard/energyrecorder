@@ -3,6 +3,6 @@ flask-restx>=0.2.0
 requests>=2.13.0
 pyyaml>=4.2b1
 dateutils>=0.6.6
-Werkzeug==2.1.2 #TODO: Remove once flask-restx will be compliant
+Werkzeug==2.2.3 #TODO: Remove once flask-restx will be compliant
 gunicorn>=20.1.0
 paho-mqtt>=1.6.1
