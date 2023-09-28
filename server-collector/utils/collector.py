@@ -369,7 +369,12 @@ class SensorsCollector(Thread):
                     )
                     measurements = self.get_sensors()
                     self.log.debug(
-                        "[%s]: MESAUREMENT=%s",
+                        "[%s]: collect processing time is %d ms",
+                        self.name,
+                        (int(time.time())*1000000000 - data_time)//1000000
+                    )
+                    self.log.debug(
+                        "[%s]: MEASUREMENT=%s",
                         self.name,
                         measurements
                     )
