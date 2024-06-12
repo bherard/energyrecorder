@@ -150,14 +150,24 @@ class RedfishCollector(SensorsCollector):
                             chassis["@odata.id"],
                             chassis["HaveThermal"]
                         )
+                        # New URI to get power but depend on SW release of BMC on requested server
+                        if "EnvironmentMetrics" in chassis_def:
+                            chassis["HaveEnvironmentMetrics"] = True
+                            # This does not ensure that PowerWatts is embedded but 1st request will update it
+                        else:
+                            chassis["HaveEnvironmentMetrics"] = False
+                        # Deprecated since 2020 datamodel but can be the only way depending on BMC SW release
                         if "Power" in chassis_def:
                             chassis["HavePower"] = True
                         else:
                             chassis["HavePower"] = False
                         self.log.debug(
-                            "[%s]: chassis %s has power data: %s",
+                            "[%s]: chassis %s has environemental data: Thermal(%s),"
+                            " EnvironementalMetrics(%s), Power --deprecated--(%s)",
                             self.name,
                             chassis["@odata.id"],
+                            chassis["HaveThermal"],
+                            chassis["HaveEnvironmentMetrics"],
                             chassis["HavePower"]
                         )
 
@@ -176,26 +186,74 @@ class RedfishCollector(SensorsCollector):
                 time.sleep(5)
         return chassis_list
 
-    def get_chassis_power(self, chassis_uri):
+    def get_chassis_power(self, chassis):
         """Get PowerMetter values form Redfish API."""
+        chassis_uri = chassis["@odata.id"]
         if chassis_uri[-1:] != '/':
             chassis_uri += '/'
         rqt_url = self.server_conf["base_url"]
         rqt_url += chassis_uri
-        rqt_url += "Power/"
-        self.log.debug(
-            "[%s]: Power at %s",
-            self.name,
-            rqt_url
-        )
-        response = requests.get(rqt_url,
-                                auth=self.pod_auth,
-                                verify=False)
-        power_metrics = json.loads(response.text)
 
         chassis_power = 0
-        for pwr in power_metrics["PowerControl"]:
-            chassis_power += pwr["PowerConsumedWatts"]
+        # EnvironmentMetrics is the nominal uri to get power of the server
+        if chassis["HaveEnvironmentMetrics"]:
+            self.log.debug(
+                "[%s]: Power at %s",
+                self.name,
+                rqt_url + "EnvironmentMetrics/"
+            )
+            response = requests.get(rqt_url + "EnvironmentMetrics/",
+                                    auth=self.pod_auth,
+                                    verify=False)
+            power_metrics = json.loads(response.text)
+            
+            if "PowerWatts" in power_metrics:
+                chassis_power += power_metrics["PowerWatts"]["Reading"]
+                self.log.debug(
+                    "[%s]: Power collected: [%s]",
+                    self.name,
+                    chassis_power
+                )
+            else:
+                chassis["HaveEnvironmentMetrics"] = False
+        
+        if not chassis["HaveEnvironmentMetrics"] and chassis["HavePower"]:
+            # for older BMC SW release we could use deprecated way still in use
+            self.log.debug(
+                "[%s]: Power at %s",
+                self.name,
+                rqt_url + "Power/"
+            )
+            response = requests.get(rqt_url + "Power/",
+                                    auth=self.pod_auth,
+                                    verify=False)
+            power_metrics = json.loads(response.text)
+
+            for pwr in power_metrics["PowerControl"]:
+                # PowerControl is a list which nb elements depends on provider 
+                # and BMC SW release
+                # PhysicalContext = Chassis ensure we are on the right list element
+                # in case BMC is not right regarding datamodel we use 1st element
+                # which id to ensure it is the first is slighty dependent on provider
+                if ("PhysicalContext" in pwr and 
+                    pwr["PhysicalContext"] == "Chassis"
+                    ) or \
+                    pwr["@odata.id"] == chassis_uri+"Power#/PowerControl/0" or \
+                    pwr["@odata.id"] == chassis_uri+"Power/#/PowerControl/0":
+                        if pwr["PowerConsumedWatts"].isdigit():
+                            chassis_power += pwr["PowerConsumedWatts"]
+                            self.log.debug(
+                                "[%s]: Power collected: [%s]",
+                                self.name,
+                                chassis_power
+                            )
+                        else:
+                            self.log.error(
+                                "[%s]: powerConsumedWatts not digit [%s]",
+                                self.name,
+                                pwr["PowerConsumedWatts"]
+                            )
+
         return chassis_power
 
     def get_chassis_thermal(self, chassis_uri, chassis_id):
@@ -217,6 +275,11 @@ class RedfishCollector(SensorsCollector):
             verify=False
         )
         thermal_metrics = json.loads(response.text)
+        
+        self.log.debug(
+            "[%s]: Thermal collected",
+            self.name
+        )
 
         for thermal in thermal_metrics["Temperatures"]:
             if thermal["Status"]["State"] == "Enabled":
@@ -257,7 +320,7 @@ class RedfishCollector(SensorsCollector):
                         chassis["@odata.id"], chassis["Id"]
                     )
                 if chassis["HavePower"] and self.server_conf["power"]:
-                    power += self.get_chassis_power(chassis["@odata.id"])
+                        power += self.get_chassis_power(chassis)
 
             except Exception:  # pylint: disable=broad-except
                 # No: default case
